@@ -1,0 +1,13 @@
+{
+  "name": "electron-quiz-app",
+  "version": "1.0.0",
+  "description": "A simple quiz application.",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron ."
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^31.1.0"
+  }
+}

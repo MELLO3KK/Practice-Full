@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz App</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="view-container">
+        <div id="home-view">
+            <h1>Quiz Master</h1>
+            <div class="home-controls">
+                <button id="go-to-creator-btn">Create a New Quiz</button>
+                <button id="go-to-taker-btn">Take a Quiz</button>
+            </div>
+        </div>
+
+        <div id="creator-view" class="hidden">
+            <div class="creator-header">
+                <h2>Create a New Quiz</h2>
+                <div class="creator-main-controls">
+                    <button id="creator-return-home-btn" class="btn-secondary">
+                        <i class="fas fa-home"></i> Return to Home
+                    </button>
+                    <button id="save-quiz-btn" class="btn-save">
+                        <i class="fas fa-save"></i> Save Quiz
+                    </button>
+                </div>
+            </div>
+            <div class="quiz-title-container">
+                <input type="text" id="quiz-title" placeholder="Enter Your Quiz Title Here...">
+            </div>
+            <div id="questions-container" class="sortable-list"></div>
+            <div class="creator-footer-controls">
+                <button id="add-question-btn" class="btn-primary">
+                    <i class="fas fa-plus"></i> Add Question
+                </button>
+            </div>
+        </div>
+
+        <div id="taker-view" class="hidden">
+            <div class="taker-header">
+                <div id="progress-bar-container">
+                    <div id="progress-bar"></div>
+                </div>
+                <button id="taker-close-btn" class="close-btn">&times;</button>
+            </div>
+            <div id="taker-content">
+                <h2 id="taker-quiz-title"></h2>
+                <div id="taker-question-area">
+                    <div class="question-media"></div>
+                    <p id="current-question-text"></p>
+                </div>
+                <div id="taker-options-container"></div>
+            </div>
+            <div id="taker-footer">
+                <div id="feedback-container" class="hidden">
+                    <div id="feedback-message"></div>
+                    <div id="post-quiz-actions" class="hidden">
+                        <div id="score-result"></div>
+                        <button id="restart-quiz-btn">Restart Quiz</button>
+                        <button id="return-home-btn">Return to Home</button>
+                    </div>
+                    <button id="next-question-btn" class="hidden">Continue</button>
+                </div>
+                <button id="check-answer-btn">Check</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="draft-restore-dialog" class="hidden">
+        <div class="dialog-content">
+            <p>Restore unsaved changes?</p>
+            <div class="dialog-buttons">
+                <button id="restore-draft-btn">Yes</button>
+                <button id="discard-draft-btn">No</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="notification-bar"></div>
+
+    <script src="sortable.min.js"></script>
+    <script src="renderer.js"></script>
+</body>
+</html>
