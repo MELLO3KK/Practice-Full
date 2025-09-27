@@ -385,6 +385,11 @@ function selectOption(idx, tile) {
     checkAnswerBtn.disabled = false;
 }
 
+function playSound(sound) {
+    const audio = new Audio(`./assets/${sound}.mp3`);
+    audio.play();
+}
+
 function checkAnswer() {
     if (selectedOptionIndex === null) return;
     const question = currentQuiz.questions[currentQuestionIndex];
@@ -403,9 +408,11 @@ function checkAnswer() {
     if (correct) {
         feedbackContainer.classList.add('correct-feedback');
         feedbackMessage.textContent = 'Correct!';
+        playSound('correct');
     } else {
         feedbackContainer.classList.add('incorrect-feedback');
         feedbackMessage.textContent = 'Incorrect!';
+        playSound('wrong');
     }
     checkAnswerBtn.style.display = 'none';
     nextQuestionBtn.classList.remove('hidden');
