@@ -36,7 +36,7 @@ app.on('window-all-closed', () => {
 // --- IPC Handlers for File Operations ---
 
 // Handle request to save a quiz
-ipcMain.handle('save-quiz', async (event, quizData) => {
+ipcMain.handle('save-quiz', async (event, quizDataString) => {
     const { filePath } = await dialog.showSaveDialog({
         title: 'Save Quiz',
         defaultPath: 'my-quiz.json',
@@ -44,8 +44,41 @@ ipcMain.handle('save-quiz', async (event, quizData) => {
     });
 
     if (filePath) {
-        fs.writeFileSync(filePath, quizData);
-        return { success: true, path: filePath };
+        try {
+            const quizData = JSON.parse(quizDataString);
+            const mediaDirName = `${path.basename(filePath, '.json')}_media`;
+            const mediaDirPath = path.join(path.dirname(filePath), mediaDirName);
+
+            // Create media directory if it doesn't exist
+            if (!fs.existsSync(mediaDirPath)) {
+                fs.mkdirSync(mediaDirPath, { recursive: true });
+            }
+
+            // Process media files
+            for (const question of quizData.questions) {
+                if (question.media && question.media.url && question.media.url.startsWith('data:')) {
+                    const dataUrl = question.media.url;
+                    const matches = dataUrl.match(/^data:(.+);base64,(.*)$/);
+                    if (matches && matches.length === 3) {
+                        const fileContents = Buffer.from(matches[2], 'base64');
+                        const mediaFileName = `${Date.now()}-${question.media.name}`;
+                        const mediaFilePath = path.join(mediaDirPath, mediaFileName);
+                        
+                        fs.writeFileSync(mediaFilePath, fileContents);
+
+                        // Update the media URL to be a relative path
+                        question.media.url = `./${mediaDirName}/${mediaFileName}`;
+                    }
+                }
+            }
+
+            // Save the updated quiz data (with relative paths) to the JSON file
+            fs.writeFileSync(filePath, JSON.stringify(quizData, null, 2));
+            return { success: true, path: filePath };
+        } catch (error) {
+            console.error('Failed to save quiz:', error);
+            return { success: false, error: error.message };
+        }
     }
     return { success: false };
 });
@@ -60,8 +93,31 @@ ipcMain.handle('load-quiz', async () => {
 
     if (filePaths && filePaths.length > 0) {
         const filePath = filePaths[0];
-        const fileContent = fs.readFileSync(filePath, 'utf-8');
-        return { success: true, data: fileContent };
+        try {
+            const fileContent = fs.readFileSync(filePath, 'utf-8');
+            const quizData = JSON.parse(fileContent);
+            const quizDir = path.dirname(filePath);
+
+            // Process media files to convert paths to data URLs
+            for (const question of quizData.questions) {
+                if (question.media && question.media.url && !question.media.url.startsWith('data:')) {
+                    const mediaPath = path.resolve(quizDir, question.media.url);
+                    if (fs.existsSync(mediaPath)) {
+                        const mediaContent = fs.readFileSync(mediaPath);
+                        const mimeType = require('mime-types').lookup(mediaPath) || 'application/octet-stream';
+                        question.media.url = `data:${mimeType};base64,${mediaContent.toString('base64')}`;
+                    } else {
+                        console.warn(`Media file not found: ${mediaPath}`);
+                        // Optionally, nullify the media object if the file is missing
+                        question.media = null; 
+                    }
+                }
+            }
+            return { success: true, data: JSON.stringify(quizData) };
+        } catch (error) {
+            console.error('Failed to load or process quiz:', error);
+            return { success: false, error: error.message };
+        }
     }
     return { success: false };
 });

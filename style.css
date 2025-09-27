@@ -532,6 +532,45 @@ button:hover, .btn-primary:hover, .btn-secondary:hover, .btn-save:hover {
     text-align: center;
 }
 
+/* --- Feedback Styles --- */
+#feedback-container {
+    padding: 20px;
+    border-radius: 12px;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+#feedback-message {
+    font-size: 2.2em;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 15px;
+    animation: pop-in 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+@keyframes pop-in {
+    0% { transform: scale(0.5); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+#feedback-container.correct-feedback {
+    background-color: #e6f4ea;
+}
+
+#feedback-container.correct-feedback #feedback-message {
+    color: #155724;
+}
+
+#feedback-container.incorrect-feedback {
+    background-color: #fdf2f2;
+}
+
+#feedback-container.incorrect-feedback #feedback-message {
+    color: #721c24;
+}
+
 /* --- Notification Bar --- */
 #notification-bar {
     position: fixed;

@@ -9,5 +9,8 @@
   "license": "MIT",
   "devDependencies": {
     "electron": "^31.1.0"
+  },
+  "dependencies": {
+    "mime-types": "^3.0.1"
   }
 }
