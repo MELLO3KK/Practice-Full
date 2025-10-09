@@ -262,26 +262,38 @@ button:hover, .btn-primary:hover, .btn-secondary:hover, .btn-save:hover {
 
 .question-header {
     display: flex;
-    align-items: center;
     justify-content: space-between;
-    margin-bottom: 20px;
-    padding-bottom: 20px;
-    border-bottom: 1px solid #f1f5f9;
+    align-items: center;
+    margin-bottom: 10px;
 }
 
 .question-top-controls {
     display: flex;
     align-items: center;
-    gap: 15px;
+    gap: 10px;
+}
+
+.question-view-controls {
+    margin-left: auto;
+    margin-right: 10px;
+}
+
+.question-content {
+    position: relative;
+}
+
+.question-text-preview {
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    background-color: #f9f9f9;
+    min-height: 40px;
 }
 
 .drag-handle {
     cursor: grab;
-    color: #a0aec0;
-    font-size: 1.8rem;
-    padding: 10px;
-    border-radius: 8px;
-    transition: background 0.2s, color 0.2s;
+    color: #aaa;
+    margin-right: 10px;
 }
 
 .drag-handle:hover {

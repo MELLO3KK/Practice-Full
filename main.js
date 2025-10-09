@@ -36,25 +36,33 @@ app.on('window-all-closed', () => {
 // --- IPC Handlers for File Operations ---
 
 // Handle request to save a quiz
-ipcMain.handle('save-quiz', async (event, quizDataString) => {
-    const { filePath } = await dialog.showSaveDialog({
-        title: 'Save Quiz',
-        defaultPath: 'my-quiz.json',
-        filters: [{ name: 'JSON Files', extensions: ['json'] }],
-    });
+ipcMain.handle('save-quiz', async (event, { quizData: quizDataString, filePath: existingFilePath }) => {
+    let targetPath = existingFilePath;
 
-    if (filePath) {
+    if (!targetPath) {
+        const { filePath } = await dialog.showSaveDialog({
+            title: 'Save Quiz',
+            defaultPath: 'my-quiz.json',
+            filters: [{ name: 'JSON Files', extensions: ['json'] }],
+        });
+        targetPath = filePath;
+    }
+
+    if (targetPath) {
         try {
             const quizData = JSON.parse(quizDataString);
-            const mediaDirName = `${path.basename(filePath, '.json')}_media`;
-            const mediaDirPath = path.join(path.dirname(filePath), mediaDirName);
+            // Clean up originalPath before saving
+            delete quizData.originalPath;
 
-            // Create media directory if it doesn't exist
-            if (!fs.existsSync(mediaDirPath)) {
-                fs.mkdirSync(mediaDirPath, { recursive: true });
+            const mediaDirName = `${path.basename(targetPath, '.json')}_media`;
+            const mediaDirPath = path.join(path.dirname(targetPath), mediaDirName);
+
+            if (quizData.questions.some(q => q.media && q.media.url)) {
+                if (!fs.existsSync(mediaDirPath)) {
+                    fs.mkdirSync(mediaDirPath, { recursive: true });
+                }
             }
 
-            // Process media files
             for (const question of quizData.questions) {
                 if (question.media && question.media.url && question.media.url.startsWith('data:')) {
                     const dataUrl = question.media.url;
@@ -66,24 +74,22 @@ ipcMain.handle('save-quiz', async (event, quizDataString) => {
                         
                         fs.writeFileSync(mediaFilePath, fileContents);
 
-                        // Update the media URL to be a relative path
                         question.media.url = `./${mediaDirName}/${mediaFileName}`;
                     }
                 }
             }
 
-            // Save the updated quiz data (with relative paths) to the JSON file
-            fs.writeFileSync(filePath, JSON.stringify(quizData, null, 2));
-            return { success: true, path: filePath };
+            fs.writeFileSync(targetPath, JSON.stringify(quizData, null, 2));
+            return { success: true, path: targetPath };
         } catch (error) {
             console.error('Failed to save quiz:', error);
             return { success: false, error: error.message };
         }
     }
-    return { success: false };
+    return { success: false, error: 'Save cancelled by user.' };
 });
 
-// Handle request to load a quiz
+// Handle request to load a quiz for taking
 ipcMain.handle('load-quiz', async () => {
     const { filePaths } = await dialog.showOpenDialog({
         title: 'Load Quiz',
@@ -116,6 +122,43 @@ ipcMain.handle('load-quiz', async () => {
             return { success: true, data: JSON.stringify(quizData) };
         } catch (error) {
             console.error('Failed to load or process quiz:', error);
+            return { success: false, error: error.message };
+        }
+    }
+    return { success: false };
+});
+
+// Handle request to load a quiz for editing
+ipcMain.handle('load-quiz-for-edit', async () => {
+    const { filePaths } = await dialog.showOpenDialog({
+        title: 'Load Quiz for Editing',
+        filters: [{ name: 'JSON Files', extensions: ['json'] }],
+        properties: ['openFile'],
+    });
+
+    if (filePaths && filePaths.length > 0) {
+        const filePath = filePaths[0];
+        try {
+            const fileContent = fs.readFileSync(filePath, 'utf-8');
+            const quizData = JSON.parse(fileContent);
+            const quizDir = path.dirname(filePath);
+
+            for (const question of quizData.questions) {
+                if (question.media && question.media.url && !question.media.url.startsWith('data:')) {
+                    const mediaPath = path.resolve(quizDir, question.media.url);
+                    if (fs.existsSync(mediaPath)) {
+                        const mediaContent = fs.readFileSync(mediaPath);
+                        const mimeType = require('mime-types').lookup(mediaPath) || 'application/octet-stream';
+                        question.media.url = `data:${mimeType};base64,${mediaContent.toString('base64')}`;
+                    } else {
+                        console.warn(`Media file not found, removing from question: ${mediaPath}`);
+                        question.media = null; 
+                    }
+                }
+            }
+            return { success: true, data: JSON.stringify(quizData), path: filePath };
+        } catch (error) {
+            console.error('Failed to load or process quiz for editing:', error);
             return { success: false, error: error.message };
         }
     }

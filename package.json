@@ -11,6 +11,8 @@
     "electron": "^31.1.0"
   },
   "dependencies": {
-    "mime-types": "^3.0.1"
+    "katex": "^0.16.23",
+    "mime-types": "^3.0.1",
+    "showdown": "^2.1.0"
   }
 }

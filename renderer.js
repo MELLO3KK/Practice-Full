@@ -1,3 +1,5 @@
+const markdownConverter = new showdown.Converter();
+
 // --- Media Upload Functions ---
 function handleMediaUpload(qIndex, fileInput) {
     const file = fileInput.files[0];
@@ -35,6 +37,7 @@ const addQuestionBtn = document.getElementById('add-question-btn');
 const saveQuizBtn = document.getElementById('save-quiz-btn');
 const goToCreatorBtn = document.getElementById('go-to-creator-btn');
 const goToTakerBtn = document.getElementById('go-to-taker-btn');
+const editQuizBtn = document.getElementById('edit-quiz-btn');
 const creatorReturnHomeBtn = document.getElementById('creator-return-home-btn');
 const restartQuizBtn = document.getElementById('restart-quiz-btn');
 const returnHomeBtn = document.getElementById('return-home-btn');
@@ -58,6 +61,39 @@ if (goToCreatorBtn) {
         } else {
             resetQuiz();
             showCreatorView();
+        }
+    });
+}
+
+if (editQuizBtn) {
+    editQuizBtn.addEventListener('click', async () => {
+        try {
+            const result = await window.electronAPI.loadQuizForEdit();
+            if (result.success) {
+                const loadedQuiz = JSON.parse(result.data);
+                
+                // Basic validation
+                if (!loadedQuiz.title || !Array.isArray(loadedQuiz.questions)) {
+                    throw new Error("Invalid quiz file format.");
+                }
+
+                currentQuiz = loadedQuiz;
+                currentQuiz.originalPath = result.path; // Store original path
+
+                quizTitleInput.value = currentQuiz.title;
+                
+                showCreatorView();
+                localStorage.removeItem('quizDraft'); // Clear any old drafts
+            } else {
+                if (result.error) {
+                    showNotification(result.error, 'error');
+                } else {
+                    showNotification('Quiz selection cancelled.', 'info');
+                }
+            }
+        } catch (error) {
+            console.error('Failed to load quiz for editing:', error);
+            showNotification(`Error: ${error.message}`, 'error');
         }
     });
 }
@@ -143,9 +179,15 @@ function renderCreatorQuestions() {
                     <i class="fas fa-grip-vertical drag-handle"></i>
                     <h4>Question ${index + 1}</h4>
                 </div>
+                <div class="question-view-controls">
+                    <button onclick="toggleQuestionPreview(${index}, this)" class="btn-secondary-small"><i class="fas fa-eye"></i> Preview</button>
+                </div>
                 <button onclick="deleteQuestion(${index})" class="btn-danger"><i class="fas fa-trash-alt"></i></button>
             </div>
-            <input type="text" class="question-text-input" placeholder="Question Text" value="${q.text}" oninput="updateQuestionText(${index}, this.value)">
+            <div class="question-content">
+                <textarea class="question-text-input" placeholder="Question Text (Markdown supported)" oninput="updateQuestionText(${index}, this.value)">${q.text}</textarea>
+                <div class="question-text-preview hidden"></div>
+            </div>
             <div class="media-upload-container">
                 <div class="media-preview">
                     ${q.media ? `
@@ -193,6 +235,32 @@ function renderCreatorQuestions() {
                 saveDraft();
             }
         });
+    }
+}
+
+function toggleQuestionPreview(index, button) {
+    const questionBlock = document.querySelector(`.question-block[data-id='${index}']`);
+    const textarea = questionBlock.querySelector('.question-text-input');
+    const preview = questionBlock.querySelector('.question-text-preview');
+
+    if (preview.classList.contains('hidden')) {
+        // Show preview
+        const markdownText = textarea.value;
+        preview.innerHTML = markdownConverter.makeHtml(markdownText);
+        renderMathInElement(preview, {
+            delimiters: [
+                {left: "$$", right: "$$", display: true},
+                {left: "$", right: "$", display: false}
+            ]
+        });
+        textarea.classList.add('hidden');
+        preview.classList.remove('hidden');
+        button.innerHTML = '<i class="fas fa-edit"></i> Edit';
+    } else {
+        // Show editor
+        textarea.classList.remove('hidden');
+        preview.classList.add('hidden');
+        button.innerHTML = '<i class="fas fa-eye"></i> Preview';
     }
 }
 
@@ -283,10 +351,14 @@ async function saveQuiz() {
 
     // Proceed with saving
     const jsonString = JSON.stringify(currentQuiz, null, 2);
-    const result = await window.electronAPI.saveQuiz(jsonString);
+    const result = await window.electronAPI.saveQuiz({
+        quizData: jsonString,
+        filePath: currentQuiz.originalPath // Pass original path if it exists
+    });
     
     if (result.success) {
         showNotification(`Quiz saved successfully!`, 'success');
+        currentQuiz.originalPath = result.path; // Update path in case of "Save As"
         localStorage.removeItem('quizDraft');
     } else {
         showNotification('Failed to save quiz.', 'error');
@@ -330,7 +402,13 @@ function renderTakerQuiz() {
 
     const question = currentQuiz.questions[currentQuestionIndex];
     quizTitle.textContent = currentQuiz.title || 'Quiz';
-    questionText.textContent = question.text;
+    questionText.innerHTML = markdownConverter.makeHtml(question.text);
+    renderMathInElement(questionText, {
+        delimiters: [
+            {left: "$$", right: "$$", display: true},
+            {left: "$", right: "$", display: false}
+        ]
+    });
 
     // Add media display
     const mediaContainer = document.createElement('div');
@@ -369,7 +447,13 @@ function renderTakerQuiz() {
     question.options.forEach((option, idx) => {
         const tile = document.createElement('div');
         tile.className = 'option-tile';
-        tile.textContent = option;
+        tile.innerHTML = markdownConverter.makeHtml(option);
+        renderMathInElement(tile, {
+            delimiters: [
+                {left: "$$", right: "$$", display: true},
+                {left: "$", right: "$", display: false}
+            ]
+        });
         tile.addEventListener('click', () => selectOption(idx, tile));
         optionsContainer.appendChild(tile);
     });
