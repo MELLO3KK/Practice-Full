@@ -312,6 +312,7 @@ const takerCloseBtn = document.getElementById('taker-close-btn');
 
 // --- Taker View Functions ---
 function renderTakerQuiz() {
+    const converter = new showdown.Converter();
     feedbackContainer.classList.add('hidden');
     feedbackContainer.classList.remove('correct-feedback', 'incorrect-feedback');
     feedbackMessage.textContent = '';
@@ -330,7 +331,7 @@ function renderTakerQuiz() {
 
     const question = currentQuiz.questions[currentQuestionIndex];
     quizTitle.textContent = currentQuiz.title || 'Quiz';
-    questionText.textContent = question.text;
+    questionText.innerHTML = converter.makeHtml(question.text);
 
     // Add media display
     const mediaContainer = document.createElement('div');
@@ -369,7 +370,7 @@ function renderTakerQuiz() {
     question.options.forEach((option, idx) => {
         const tile = document.createElement('div');
         tile.className = 'option-tile';
-        tile.textContent = option;
+        tile.innerHTML = converter.makeHtml(option);
         tile.addEventListener('click', () => selectOption(idx, tile));
         optionsContainer.appendChild(tile);
     });
