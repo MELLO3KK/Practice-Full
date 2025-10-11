@@ -393,7 +393,6 @@ function renderTakerQuiz() {
 }
 
 function selectOption(idx, tile) {
-    if (selectedOptionIndex !== null) return;
     selectedOptionIndex = idx;
     Array.from(optionsContainer.children).forEach(child => {
         child.classList.remove('selected');
