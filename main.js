@@ -83,6 +83,48 @@ ipcMain.handle('save-quiz', async (event, quizDataString) => {
     return { success: false };
 });
 
+// Handle request to update an existing quiz
+ipcMain.handle('update-quiz', async (event, { quizDataString, filePath }) => {
+    if (filePath) {
+        try {
+            const quizData = JSON.parse(quizDataString);
+            const mediaDirName = `${path.basename(filePath, '.json')}_media`;
+            const mediaDirPath = path.join(path.dirname(filePath), mediaDirName);
+
+            // Create media directory if it doesn't exist
+            if (!fs.existsSync(mediaDirPath)) {
+                fs.mkdirSync(mediaDirPath, { recursive: true });
+            }
+
+            // Process media files
+            for (const question of quizData.questions) {
+                if (question.media && question.media.url && question.media.url.startsWith('data:')) {
+                    const dataUrl = question.media.url;
+                    const matches = dataUrl.match(/^data:(.+);base64,(.*)$/);
+                    if (matches && matches.length === 3) {
+                        const fileContents = Buffer.from(matches[2], 'base64');
+                        const mediaFileName = `${Date.now()}-${question.media.name}`;
+                        const mediaFilePath = path.join(mediaDirPath, mediaFileName);
+
+                        fs.writeFileSync(mediaFilePath, fileContents);
+
+                        // Update the media URL to be a relative path
+                        question.media.url = `./${mediaDirName}/${mediaFileName}`;
+                    }
+                }
+            }
+
+            // Save the updated quiz data (with relative paths) to the JSON file
+            fs.writeFileSync(filePath, JSON.stringify(quizData, null, 2));
+            return { success: true, path: filePath };
+        } catch (error) {
+            console.error('Failed to update quiz:', error);
+            return { success: false, error: error.message };
+        }
+    }
+    return { success: false, error: 'No file path provided.' };
+});
+
 // Handle request to load a quiz
 ipcMain.handle('load-quiz', async () => {
     const { filePaths } = await dialog.showOpenDialog({
@@ -113,7 +155,7 @@ ipcMain.handle('load-quiz', async () => {
                     }
                 }
             }
-            return { success: true, data: JSON.stringify(quizData) };
+            return { success: true, data: JSON.stringify(quizData), path: filePath };
         } catch (error) {
             console.error('Failed to load or process quiz:', error);
             return { success: false, error: error.message };

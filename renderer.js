@@ -20,6 +20,8 @@ function removeMedia(qIndex) {
     renderCreatorQuestions();
     saveDraft();
 }
+let currentQuizFilePath = null;
+
 let currentQuiz = {
     title: '',
     questions: [],
@@ -286,7 +288,18 @@ async function saveQuiz() {
 
     // Proceed with saving
     const jsonString = JSON.stringify(currentQuiz, null, 2);
-    const result = await window.electronAPI.saveQuiz(jsonString);
+    let result;
+
+    if (currentQuizFilePath) {
+        // Update existing quiz
+        result = await window.electronAPI.updateQuiz(jsonString, currentQuizFilePath);
+    } else {
+        // Save new quiz
+        result = await window.electronAPI.saveQuiz(jsonString);
+        if (result.success) {
+            currentQuizFilePath = result.path; // Store new path for subsequent saves
+        }
+    }
     
     if (result.success) {
         showNotification(`Quiz saved successfully!`, 'success');
@@ -529,6 +542,7 @@ async function loadQuizForEditing() {
             }
 
             currentQuiz = loadedQuiz;
+            currentQuizFilePath = result.path; // Store the file path
             quizTitleInput.value = currentQuiz.title;
 
             // Switch to creator view
@@ -553,6 +567,7 @@ function resetQuiz() {
         title: '',
         questions: [],
     };
+    currentQuizFilePath = null; // Reset the file path
     if (quizTitleInput) quizTitleInput.value = '';
     if (questionsContainer) questionsContainer.innerHTML = '';
 }
