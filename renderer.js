@@ -35,6 +35,7 @@ const addQuestionBtn = document.getElementById('add-question-btn');
 const saveQuizBtn = document.getElementById('save-quiz-btn');
 const goToCreatorBtn = document.getElementById('go-to-creator-btn');
 const goToTakerBtn = document.getElementById('go-to-taker-btn');
+const editQuizBtn = document.getElementById('edit-quiz-btn');
 const creatorReturnHomeBtn = document.getElementById('creator-return-home-btn');
 const restartQuizBtn = document.getElementById('restart-quiz-btn');
 const returnHomeBtn = document.getElementById('return-home-btn');
@@ -63,6 +64,8 @@ if (goToCreatorBtn) {
 }
 
 if (goToTakerBtn) goToTakerBtn.addEventListener('click', loadQuiz);
+
+if (editQuizBtn) editQuizBtn.addEventListener('click', loadQuizForEditing);
 
 if (creatorReturnHomeBtn) {
     creatorReturnHomeBtn.addEventListener('click', () => {
@@ -511,6 +514,36 @@ async function loadQuiz() {
         showNotification(`Failed to load quiz: ${error.message}`, 'error');
         homeView.classList.remove('hidden');
         takerView.classList.add('hidden');
+    }
+}
+
+async function loadQuizForEditing() {
+    try {
+        const result = await window.electronAPI.loadQuiz();
+        if (result.success) {
+            const loadedQuiz = JSON.parse(result.data);
+
+            // Basic validation
+            if (!loadedQuiz.title || !Array.isArray(loadedQuiz.questions)) {
+                throw new Error("Invalid quiz file format.");
+            }
+
+            currentQuiz = loadedQuiz;
+            quizTitleInput.value = currentQuiz.title;
+
+            // Switch to creator view
+            homeView.classList.add('hidden');
+            takerView.classList.add('hidden');
+            creatorView.classList.remove('hidden');
+
+            // Render the questions for editing
+            renderCreatorQuestions();
+        } else {
+            showNotification('Load cancelled.', 'info');
+        }
+    } catch (error) {
+        console.error('Failed to load quiz for editing:', error);
+        showNotification(`Error: ${error.message}`, 'error');
     }
 }
 
