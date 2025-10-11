@@ -1,0 +1,15 @@
+{
+  "title": "Markdown Quiz",
+  "questions": [
+    {
+      "text": "**This is a bold question.**",
+      "options": [
+        "*This is an italic option.*",
+        "`This is a code option.`",
+        "This is a plain option.",
+        "~~This is a strikethrough option.~~"
+      ],
+      "correctAnswerIndex": 0
+    }
+  ]
+}
