@@ -579,3 +579,28 @@ function showNotification(message, type = 'success') {
         notificationBar.className = notificationBar.className.replace('show', '');
     }, 3000);
 }
+
+// --- Theme Management ---
+const themeCheckbox = document.getElementById('theme-checkbox');
+
+function applyTheme(theme) {
+    if (theme === 'dark') {
+        document.body.classList.add('dark-mode');
+        if (themeCheckbox) themeCheckbox.checked = true;
+    } else {
+        document.body.classList.remove('dark-mode');
+        if (themeCheckbox) themeCheckbox.checked = false;
+    }
+}
+
+if (themeCheckbox) {
+    themeCheckbox.addEventListener('change', () => {
+        const newTheme = themeCheckbox.checked ? 'dark' : 'light';
+        localStorage.setItem('theme', newTheme);
+        applyTheme(newTheme);
+    });
+}
+
+// On initial load, apply the saved theme
+const savedTheme = localStorage.getItem('theme') || 'light';
+applyTheme(savedTheme);
