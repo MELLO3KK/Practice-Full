@@ -84,7 +84,7 @@ ipcMain.handle('save-quiz', async (event, quizDataString) => {
 });
 
 // Handle request to update an existing quiz
-ipcMain.handle('update-quiz', async (event, { quizDataString, filePath }) => {
+ipcMain.handle('update-quiz', async (event, quizDataString, filePath) => {
     if (filePath) {
         try {
             const quizData = JSON.parse(quizDataString);
