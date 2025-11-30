@@ -1,3 +1,4 @@
+document.addEventListener('DOMContentLoaded', () => {
 // --- Media Upload Functions ---
 function handleMediaUpload(qIndex, fileInput) {
     const file = fileInput.files[0];
@@ -397,7 +398,7 @@ function selectOption(idx, tile) {
     Array.from(optionsContainer.children).forEach(child => {
         child.classList.remove('selected');
     });
-    tile.classList.add('selected');
+    tile.classList..add('selected');
     checkAnswerBtn.disabled = false;
 }
 
@@ -604,3 +605,4 @@ if (themeCheckbox) {
 // On initial load, apply the saved theme
 const savedTheme = localStorage.getItem('theme') || 'light';
 applyTheme(savedTheme);
+});
