@@ -124,6 +124,12 @@ function showCreatorView() {
     renderCreatorQuestions();
 }
 
+function showHomeView() {
+    homeView.classList.remove('hidden');
+    creatorView.classList.add('hidden');
+    takerView.classList.add('hidden');
+}
+
 // --- Creator Functions ---
 function addQuestion() {
     currentQuiz.questions.push({
@@ -604,3 +610,8 @@ if (themeCheckbox) {
 // On initial load, apply the saved theme
 const savedTheme = localStorage.getItem('theme') || 'light';
 applyTheme(savedTheme);
+
+// --- Initial View Setup ---
+document.addEventListener('DOMContentLoaded', () => {
+    showHomeView();
+});
