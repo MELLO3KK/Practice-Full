@@ -11,6 +11,7 @@
     "electron": "^31.1.0"
   },
   "dependencies": {
-    "mime-types": "^3.0.1"
+    "mime-types": "^3.0.1",
+    "sortablejs": "^1.15.6"
   }
 }
