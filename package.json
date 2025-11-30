@@ -4,11 +4,12 @@
   "description": "A simple quiz application.",
   "main": "main.js",
   "scripts": {
-    "start": "electron . --remote-debugging-port=9222"
+    "start": "./node_modules/.bin/electron . --remote-debugging-port=9222"
   },
   "license": "MIT",
   "devDependencies": {
-    "electron": "^31.1.0"
+    "electron": "^31.1.0",
+    "sortablejs": "^1.15.6"
   },
   "dependencies": {
     "mime-types": "^3.0.1"
