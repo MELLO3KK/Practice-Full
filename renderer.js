@@ -385,7 +385,7 @@ function renderTakerQuiz() {
     optionsContainer.innerHTML = '';
     question.options.forEach((option, idx) => {
         const tile = document.createElement('div');
-        tile.className = 'option-tile';
+        tile.className = 'option-row-t';
         tile.innerHTML = converter.makeHtml(option);
         tile.addEventListener('click', () => selectOption(idx, tile));
         optionsContainer.appendChild(tile);

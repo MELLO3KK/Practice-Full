@@ -800,3 +800,13 @@ body.dark-mode .dialog-content {
     display: flex;
     gap: 15px;
 }
+
+.option-row-t {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 8px;
+    border-radius: 12px;
+    background: #f8fafc;
+    transition: background 0.2s;
+}
