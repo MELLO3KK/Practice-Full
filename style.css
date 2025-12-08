@@ -111,7 +111,7 @@ h1, h2 {
 }
 
 /* --- General Button Styles --- */
-button, .btn-primary, .btn-secondary, .btn-save {
+.btn-primary, .btn-secondary, .btn-save {
     padding: 15px 35px;
     font-size: 1.1em;
     font-weight: 600;
@@ -127,6 +127,21 @@ button, .btn-primary, .btn-secondary, .btn-save {
     box-shadow: 0 4px 12px rgba(24, 119, 242, 0.2);
     text-transform: uppercase;
     letter-spacing: 0.5px;
+}
+
+.option-button {
+    width: 100%;
+    padding: 15px;
+    font-size: 1.1em;
+    font-weight: 500;
+    border-radius: 12px;
+    border: 2px solid #e2e8f0;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: #ffffff;
+    color: #333;
+    text-align: center;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
 }
 
 button:hover, .btn-primary:hover, .btn-secondary:hover, .btn-save:hover {

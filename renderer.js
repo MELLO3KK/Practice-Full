@@ -384,11 +384,11 @@ function renderTakerQuiz() {
 
     optionsContainer.innerHTML = '';
     question.options.forEach((option, idx) => {
-        const tile = document.createElement('div');
-        tile.className = 'option-tile';
-        tile.innerHTML = converter.makeHtml(option);
-        tile.addEventListener('click', () => selectOption(idx, tile));
-        optionsContainer.appendChild(tile);
+        const button = document.createElement('button');
+        button.className = 'option-button';
+        button.innerHTML = converter.makeHtml(option);
+        button.addEventListener('click', () => selectOption(idx, button));
+        optionsContainer.appendChild(button);
     });
 }
 
