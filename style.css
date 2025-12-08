@@ -515,7 +515,7 @@ body.dark-mode .dialog-content {
     cursor: pointer;
 }
 
-.option-row input[type="text"] {
+.option-row .option-input-text {
     flex: 1;
     padding: 14px 16px;
     border: 2px solid #e2e8f0;
@@ -523,7 +523,7 @@ body.dark-mode .dialog-content {
     transition: border-color 0.2s, box-shadow 0.2s;
 }
 
-.option-row input[type="text"]:focus {
+.option-row .option-input-text:focus {
     border-color: #1877f2;
     box-shadow: 0 0 0 3px rgba(24, 119, 242, 0.15);
     outline: none;

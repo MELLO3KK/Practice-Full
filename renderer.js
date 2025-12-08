@@ -175,7 +175,7 @@ function renderCreatorQuestions() {
                 ${q.options.map((opt, optIndex) => `
                     <div class="option-row">
                         <input type="radio" name="correct_${index}" ${q.correctAnswerIndex === optIndex ? 'checked' : ''} onchange="updateCorrectAnswer(${index}, ${optIndex})">
-                        <input type="text" class="form-control" placeholder="Option ${optIndex + 1}" value="${opt}" oninput="updateOptionText(${index}, ${optIndex}, this.value)">
+                        <input type="text" class="option-input-text" placeholder="Option ${optIndex + 1}" value="${opt}" oninput="updateOptionText(${index}, ${optIndex}, this.value)">
                         <button onclick="deleteOption(${index}, ${optIndex})" class="btn-danger-small">X</button>
                     </div>
                 `).join('')}
