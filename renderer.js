@@ -313,6 +313,10 @@ async function saveQuiz() {
 let currentQuestionIndex = 0;
 let score = 0;
 let selectedOptionIndex = null;
+let incorrectQuestions = [];
+let questionsToRepeat = [];
+let isFirstAttempt = true;
+let totalQuestions = 0;
 
 // --- Taker View DOM Elements ---
 const progressBar = document.getElementById('progress-bar');
@@ -408,10 +412,19 @@ function playSound(sound) {
 
 function checkAnswer() {
     if (selectedOptionIndex === null) return;
+
     const question = currentQuiz.questions[currentQuestionIndex];
-    const correctIdx = question.correctAnswerIndex;
-    const correct = selectedOptionIndex === correctIdx;
-    if (correct) score++;
+    const correct = selectedOptionIndex === question.correctAnswerIndex;
+
+    if (isFirstAttempt) {
+        if (correct) {
+            score++;
+        } else {
+            incorrectQuestions.push(question);
+        }
+    } else if (!correct) {
+        questionsToRepeat.push(question);
+    }
 
     Array.from(optionsContainer.children).forEach((tile, i) => {
         tile.classList.remove('selected');
@@ -436,11 +449,23 @@ function checkAnswer() {
 
 function nextQuestion() {
     currentQuestionIndex++;
-    if (currentQuestionIndex < currentQuiz.questions.length) {
-        renderTakerQuiz();
-    } else {
-        showQuizResult();
+    if (currentQuestionIndex >= currentQuiz.questions.length) {
+        if (incorrectQuestions.length > 0) {
+            currentQuiz.questions = incorrectQuestions;
+            incorrectQuestions = [];
+            currentQuestionIndex = 0;
+            isFirstAttempt = false;
+        } else if (questionsToRepeat.length > 0) {
+            currentQuiz.questions = questionsToRepeat;
+            questionsToRepeat = [];
+            currentQuestionIndex = 0;
+            isFirstAttempt = false;
+        } else {
+            showQuizResult();
+            return;
+        }
     }
+    renderTakerQuiz();
 }
 
 function showQuizResult() {
@@ -449,9 +474,9 @@ function showQuizResult() {
     questionText.textContent = '';
     checkAnswerBtn.style.display = 'none';
     feedbackContainer.classList.remove('hidden', 'correct-feedback', 'incorrect-feedback');
-    feedbackMessage.textContent = `Quiz Complete! Your score: ${score} / ${currentQuiz.questions.length}`;
+    feedbackMessage.textContent = `Quiz Complete! Your score: ${score} / ${totalQuestions}`;
     nextQuestionBtn.classList.add('hidden');
-    if (scoreResult) scoreResult.textContent = `Score: ${score} / ${currentQuiz.questions.length}`;
+    if (scoreResult) scoreResult.textContent = `Score: ${score} / ${totalQuestions}`;
     if (postQuizActions) postQuizActions.classList.remove('hidden');
 }
 
@@ -517,6 +542,9 @@ async function loadQuiz() {
             takerView.classList.remove('hidden');
             currentQuestionIndex = 0;
             score = 0;
+            incorrectQuestions = [];
+            isFirstAttempt = true;
+            totalQuestions = currentQuiz.questions.length;
             renderTakerQuiz();
         } else {
             showNotification('Load cancelled.', 'error');
