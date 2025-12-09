@@ -82,7 +82,8 @@ if (quizTitleInput) {
 
 if (restartQuizBtn) {
     restartQuizBtn.addEventListener('click', () => {
-        currentQuestionIndex = 0;
+        questionQueue = currentQuiz.questions.map((_, i) => i);
+        questionsAttempted.clear();
         score = 0;
         renderTakerQuiz();
     });
@@ -313,6 +314,8 @@ async function saveQuiz() {
 let currentQuestionIndex = 0;
 let score = 0;
 let selectedOptionIndex = null;
+let questionQueue = [];
+let questionsAttempted = new Set();
 
 // --- Taker View DOM Elements ---
 const progressBar = document.getElementById('progress-bar');
@@ -340,11 +343,12 @@ function renderTakerQuiz() {
     if (postQuizActions) postQuizActions.classList.add('hidden');
     if (scoreResult) scoreResult.textContent = '';
 
-    if (currentQuestionIndex >= currentQuiz.questions.length) {
+    if (questionQueue.length === 0) {
         showQuizResult();
         return;
     }
 
+    currentQuestionIndex = questionQueue[0];
     const question = currentQuiz.questions[currentQuestionIndex];
     quizTitle.textContent = currentQuiz.title || 'Quiz';
     questionText.innerHTML = converter.makeHtml(question.text);
@@ -379,7 +383,7 @@ function renderTakerQuiz() {
     }
 
     const progress = currentQuiz.questions.length > 0 ?
-        ((currentQuestionIndex) / currentQuiz.questions.length) * 100 : 0;
+        (questionsAttempted.size / currentQuiz.questions.length) * 100 : 0;
     progressBar.style.width = progress + '%';
 
     optionsContainer.innerHTML = '';
@@ -408,20 +412,31 @@ function playSound(sound) {
 
 function checkAnswer() {
     if (selectedOptionIndex === null) return;
+
     const question = currentQuiz.questions[currentQuestionIndex];
     const correctIdx = question.correctAnswerIndex;
-    const correct = selectedOptionIndex === correctIdx;
-    if (correct) score++;
+    const isCorrect = selectedOptionIndex === correctIdx;
+
+    if (!questionsAttempted.has(currentQuestionIndex)) {
+        questionsAttempted.add(currentQuestionIndex);
+        if (isCorrect) {
+            score++;
+        }
+    }
+
+    if (!isCorrect) {
+        questionQueue.push(currentQuestionIndex);
+    }
 
     Array.from(optionsContainer.children).forEach((tile, i) => {
         tile.classList.remove('selected');
         if (i === correctIdx) tile.classList.add('correct');
-        if (i === selectedOptionIndex && !correct) tile.classList.add('incorrect');
+        if (i === selectedOptionIndex && !isCorrect) tile.classList.add('incorrect');
         tile.style.pointerEvents = 'none';
     });
 
     feedbackContainer.classList.remove('hidden');
-    if (correct) {
+    if (isCorrect) {
         feedbackContainer.classList.add('correct-feedback');
         feedbackMessage.innerHTML = '<i class="fas fa-check-circle"></i> Correct!';
         playSound('correct');
@@ -430,13 +445,14 @@ function checkAnswer() {
         feedbackMessage.innerHTML = '<i class="fas fa-times-circle"></i> Incorrect!';
         playSound('wrong');
     }
+
     checkAnswerBtn.style.display = 'none';
     nextQuestionBtn.classList.remove('hidden');
 }
 
 function nextQuestion() {
-    currentQuestionIndex++;
-    if (currentQuestionIndex < currentQuiz.questions.length) {
+    questionQueue.shift();
+    if (questionQueue.length > 0) {
         renderTakerQuiz();
     } else {
         showQuizResult();
@@ -515,7 +531,8 @@ async function loadQuiz() {
             // Proceed to show quiz
             homeView.classList.add('hidden');
             takerView.classList.remove('hidden');
-            currentQuestionIndex = 0;
+            questionQueue = currentQuiz.questions.map((_, i) => i);
+            questionsAttempted.clear();
             score = 0;
             renderTakerQuiz();
         } else {
