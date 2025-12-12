@@ -1,0 +1,30 @@
+{
+  "title": "Test Quiz",
+  "questions": [
+    {
+      "text": "What is 2 + 2?",
+      "options": ["3", "4", "5"],
+      "correctAnswerIndex": 1
+    },
+    {
+      "text": "What is the capital of France?",
+      "options": ["London", "Paris", "Berlin"],
+      "correctAnswerIndex": 1
+    },
+    {
+      "text": "What is the color of the sky?",
+      "options": ["Blue", "Green", "Red"],
+      "correctAnswerIndex": 0
+    },
+    {
+      "text": "What is the opposite of hot?",
+      "options": ["Warm", "Cold", "Cool"],
+      "correctAnswerIndex": 1
+    },
+    {
+      "text": "What is the sound of a cat?",
+      "options": ["Woof", "Meow", "Moo"],
+      "correctAnswerIndex": 1
+    }
+  ]
+}

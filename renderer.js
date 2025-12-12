@@ -84,6 +84,8 @@ if (restartQuizBtn) {
     restartQuizBtn.addEventListener('click', () => {
         currentQuestionIndex = 0;
         score = 0;
+        questionQueue = [...currentQuiz.questions];
+        questionsAnswered = [];
         renderTakerQuiz();
     });
 }
@@ -313,6 +315,8 @@ async function saveQuiz() {
 let currentQuestionIndex = 0;
 let score = 0;
 let selectedOptionIndex = null;
+let questionsAnswered = [];
+let questionQueue = [];
 
 // --- Taker View DOM Elements ---
 const progressBar = document.getElementById('progress-bar');
@@ -340,12 +344,12 @@ function renderTakerQuiz() {
     if (postQuizActions) postQuizActions.classList.add('hidden');
     if (scoreResult) scoreResult.textContent = '';
 
-    if (currentQuestionIndex >= currentQuiz.questions.length) {
+    if (currentQuestionIndex >= questionQueue.length) {
         showQuizResult();
         return;
     }
 
-    const question = currentQuiz.questions[currentQuestionIndex];
+    const question = questionQueue[currentQuestionIndex];
     quizTitle.textContent = currentQuiz.title || 'Quiz';
     questionText.innerHTML = converter.makeHtml(question.text);
 
@@ -408,20 +412,36 @@ function playSound(sound) {
 
 function checkAnswer() {
     if (selectedOptionIndex === null) return;
-    const question = currentQuiz.questions[currentQuestionIndex];
+
+    const question = questionQueue[currentQuestionIndex];
     const correctIdx = question.correctAnswerIndex;
-    const correct = selectedOptionIndex === correctIdx;
-    if (correct) score++;
+    const isCorrect = selectedOptionIndex === correctIdx;
+
+    const questionIdentifier = question.id;
+    const isFirstAttempt = !questionsAnswered.includes(questionIdentifier);
+
+    if (isFirstAttempt) {
+        questionsAnswered.push(questionIdentifier);
+        if (isCorrect) {
+            score++;
+        } else {
+            questionQueue.push(question);
+        }
+    } else {
+        if (!isCorrect) {
+            questionQueue.push(question);
+        }
+    }
 
     Array.from(optionsContainer.children).forEach((tile, i) => {
         tile.classList.remove('selected');
         if (i === correctIdx) tile.classList.add('correct');
-        if (i === selectedOptionIndex && !correct) tile.classList.add('incorrect');
+        if (i === selectedOptionIndex && !isCorrect) tile.classList.add('incorrect');
         tile.style.pointerEvents = 'none';
     });
 
     feedbackContainer.classList.remove('hidden');
-    if (correct) {
+    if (isCorrect) {
         feedbackContainer.classList.add('correct-feedback');
         feedbackMessage.innerHTML = '<i class="fas fa-check-circle"></i> Correct!';
         playSound('correct');
@@ -430,16 +450,17 @@ function checkAnswer() {
         feedbackMessage.innerHTML = '<i class="fas fa-times-circle"></i> Incorrect!';
         playSound('wrong');
     }
+
     checkAnswerBtn.style.display = 'none';
     nextQuestionBtn.classList.remove('hidden');
 }
 
 function nextQuestion() {
     currentQuestionIndex++;
-    if (currentQuestionIndex < currentQuiz.questions.length) {
-        renderTakerQuiz();
-    } else {
+    if (currentQuestionIndex >= questionQueue.length) {
         showQuizResult();
+    } else {
+        renderTakerQuiz();
     }
 }
 
@@ -481,31 +502,32 @@ async function loadQuiz() {
             };
 
             // Process each question with validation
-            for (const q of loadedQuiz.questions) {
+            loadedQuiz.questions.forEach((q, index) => {
                 // Ensure basic structure exists
                 if (!q.text || !Array.isArray(q.options) || q.options.length < 2) {
                     console.warn("Skipping invalid question:", q);
-                    continue;
+                    return;
                 }
 
                 // Sanitize options
-                const sanitizedOptions = q.options.map(opt => 
+                const sanitizedOptions = q.options.map(opt =>
                     typeof opt === 'string' ? opt : String(opt)
                 );
 
                 // Validate correct answer index
-                let correctIdx = Number.isInteger(q.correctAnswerIndex) ? 
+                let correctIdx = Number.isInteger(q.correctAnswerIndex) ?
                     q.correctAnswerIndex : 0;
-                
+
                 correctIdx = Math.max(0, Math.min(correctIdx, sanitizedOptions.length - 1));
 
                 currentQuiz.questions.push({
+                    id: index,
                     text: q.text || '',
                     options: sanitizedOptions,
                     correctAnswerIndex: correctIdx,
                     media: q.media || null
                 });
-            }
+            });
 
             // Final validation
             if (currentQuiz.questions.length === 0) {
@@ -517,6 +539,8 @@ async function loadQuiz() {
             takerView.classList.remove('hidden');
             currentQuestionIndex = 0;
             score = 0;
+            questionQueue = [...currentQuiz.questions];
+            questionsAnswered = [];
             renderTakerQuiz();
         } else {
             showNotification('Load cancelled.', 'error');
