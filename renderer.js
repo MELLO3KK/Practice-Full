@@ -82,8 +82,11 @@ if (quizTitleInput) {
 
 if (restartQuizBtn) {
     restartQuizBtn.addEventListener('click', () => {
-        currentQuestionIndex = 0;
         score = 0;
+        currentQuestionIndex = 0;
+        questionsToAsk = [...currentQuiz.questions];
+        questionsToAsk.forEach(q => q.firstTry = true);
+        correctlyAnsweredIndices.clear();
         renderTakerQuiz();
     });
 }
@@ -187,8 +190,8 @@ function renderCreatorQuestions() {
         questionsContainer.appendChild(questionBlock);
     });
 
-    if (window.Sortable) {
-        new window.Sortable(questionsContainer, {
+    if (typeof Sortable !== 'undefined') {
+        new Sortable(questionsContainer, {
             animation: 150,
             handle: '.drag-handle',
             onEnd: function (evt) {
@@ -310,9 +313,11 @@ async function saveQuiz() {
 }
 
 // --- Taker View State ---
-let currentQuestionIndex = 0;
 let score = 0;
 let selectedOptionIndex = null;
+let questionsToAsk = [];
+let currentQuestionIndex = 0;
+let correctlyAnsweredIndices = new Set();
 
 // --- Taker View DOM Elements ---
 const progressBar = document.getElementById('progress-bar');
@@ -340,12 +345,12 @@ function renderTakerQuiz() {
     if (postQuizActions) postQuizActions.classList.add('hidden');
     if (scoreResult) scoreResult.textContent = '';
 
-    if (currentQuestionIndex >= currentQuiz.questions.length) {
+    if (currentQuestionIndex >= questionsToAsk.length) {
         showQuizResult();
         return;
     }
 
-    const question = currentQuiz.questions[currentQuestionIndex];
+    const question = questionsToAsk[currentQuestionIndex];
     quizTitle.textContent = currentQuiz.title || 'Quiz';
     questionText.innerHTML = converter.makeHtml(question.text);
 
@@ -379,7 +384,7 @@ function renderTakerQuiz() {
     }
 
     const progress = currentQuiz.questions.length > 0 ?
-        ((currentQuestionIndex) / currentQuiz.questions.length) * 100 : 0;
+        (correctlyAnsweredIndices.size / currentQuiz.questions.length) * 100 : 0;
     progressBar.style.width = progress + '%';
 
     optionsContainer.innerHTML = '';
@@ -408,10 +413,19 @@ function playSound(sound) {
 
 function checkAnswer() {
     if (selectedOptionIndex === null) return;
-    const question = currentQuiz.questions[currentQuestionIndex];
+    const question = questionsToAsk[currentQuestionIndex];
     const correctIdx = question.correctAnswerIndex;
     const correct = selectedOptionIndex === correctIdx;
-    if (correct) score++;
+
+    if (correct) {
+        if (question.firstTry) {
+            score++;
+        }
+        correctlyAnsweredIndices.add(question.originalIndex);
+    } else {
+        questionsToAsk.push(question);
+    }
+    question.firstTry = false;
 
     Array.from(optionsContainer.children).forEach((tile, i) => {
         tile.classList.remove('selected');
@@ -436,7 +450,7 @@ function checkAnswer() {
 
 function nextQuestion() {
     currentQuestionIndex++;
-    if (currentQuestionIndex < currentQuiz.questions.length) {
+    if (currentQuestionIndex < questionsToAsk.length) {
         renderTakerQuiz();
     } else {
         showQuizResult();
@@ -511,12 +525,18 @@ async function loadQuiz() {
             if (currentQuiz.questions.length === 0) {
                 throw new Error("No valid questions found in quiz file");
             }
+
+            // Add original index to each question
+            currentQuiz.questions.forEach((q, index) => q.originalIndex = index);
             
             // Proceed to show quiz
             homeView.classList.add('hidden');
             takerView.classList.remove('hidden');
-            currentQuestionIndex = 0;
             score = 0;
+            currentQuestionIndex = 0;
+            questionsToAsk = [...currentQuiz.questions];
+            questionsToAsk.forEach(q => q.firstTry = true);
+            correctlyAnsweredIndices.clear();
             renderTakerQuiz();
         } else {
             showNotification('Load cancelled.', 'error');
