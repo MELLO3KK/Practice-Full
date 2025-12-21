@@ -5,4 +5,5 @@ const { contextBridge, ipcRenderer } = require('electron');
 contextBridge.exposeInMainWorld('electronAPI', {
     saveQuiz: (quizData) => ipcRenderer.invoke('save-quiz', quizData),
     loadQuiz: () => ipcRenderer.invoke('load-quiz'),
+    updateQuiz: (quizData, filePath) => ipcRenderer.invoke('update-quiz', { quizDataString: quizData, filePath }),
 });

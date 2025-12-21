@@ -20,6 +20,8 @@ function removeMedia(qIndex) {
     renderCreatorQuestions();
     saveDraft();
 }
+let currentQuizFilePath = null;
+
 let currentQuiz = {
     title: '',
     questions: [],
@@ -35,6 +37,7 @@ const addQuestionBtn = document.getElementById('add-question-btn');
 const saveQuizBtn = document.getElementById('save-quiz-btn');
 const goToCreatorBtn = document.getElementById('go-to-creator-btn');
 const goToTakerBtn = document.getElementById('go-to-taker-btn');
+const editQuizBtn = document.getElementById('edit-quiz-btn');
 const creatorReturnHomeBtn = document.getElementById('creator-return-home-btn');
 const restartQuizBtn = document.getElementById('restart-quiz-btn');
 const returnHomeBtn = document.getElementById('return-home-btn');
@@ -63,6 +66,8 @@ if (goToCreatorBtn) {
 }
 
 if (goToTakerBtn) goToTakerBtn.addEventListener('click', loadQuiz);
+
+if (editQuizBtn) editQuizBtn.addEventListener('click', loadQuizForEditing);
 
 if (creatorReturnHomeBtn) {
     creatorReturnHomeBtn.addEventListener('click', () => {
@@ -283,7 +288,18 @@ async function saveQuiz() {
 
     // Proceed with saving
     const jsonString = JSON.stringify(currentQuiz, null, 2);
-    const result = await window.electronAPI.saveQuiz(jsonString);
+    let result;
+
+    if (currentQuizFilePath) {
+        // Update existing quiz
+        result = await window.electronAPI.updateQuiz(jsonString, currentQuizFilePath);
+    } else {
+        // Save new quiz
+        result = await window.electronAPI.saveQuiz(jsonString);
+        if (result.success) {
+            currentQuizFilePath = result.path; // Store new path for subsequent saves
+        }
+    }
     
     if (result.success) {
         showNotification(`Quiz saved successfully!`, 'success');
@@ -312,6 +328,7 @@ const takerCloseBtn = document.getElementById('taker-close-btn');
 
 // --- Taker View Functions ---
 function renderTakerQuiz() {
+    const converter = new showdown.Converter();
     feedbackContainer.classList.add('hidden');
     feedbackContainer.classList.remove('correct-feedback', 'incorrect-feedback');
     feedbackMessage.textContent = '';
@@ -330,7 +347,7 @@ function renderTakerQuiz() {
 
     const question = currentQuiz.questions[currentQuestionIndex];
     quizTitle.textContent = currentQuiz.title || 'Quiz';
-    questionText.textContent = question.text;
+    questionText.innerHTML = converter.makeHtml(question.text);
 
     // Add media display
     const mediaContainer = document.createElement('div');
@@ -369,14 +386,13 @@ function renderTakerQuiz() {
     question.options.forEach((option, idx) => {
         const tile = document.createElement('div');
         tile.className = 'option-tile';
-        tile.textContent = option;
+        tile.innerHTML = converter.makeHtml(option);
         tile.addEventListener('click', () => selectOption(idx, tile));
         optionsContainer.appendChild(tile);
     });
 }
 
 function selectOption(idx, tile) {
-    if (selectedOptionIndex !== null) return;
     selectedOptionIndex = idx;
     Array.from(optionsContainer.children).forEach(child => {
         child.classList.remove('selected');
@@ -513,12 +529,44 @@ async function loadQuiz() {
     }
 }
 
+async function loadQuizForEditing() {
+    try {
+        const result = await window.electronAPI.loadQuiz();
+        if (result.success) {
+            const loadedQuiz = JSON.parse(result.data);
+
+            // Basic validation
+            if (!loadedQuiz.title || !Array.isArray(loadedQuiz.questions)) {
+                throw new Error("Invalid quiz file format.");
+            }
+
+            currentQuiz = loadedQuiz;
+            currentQuizFilePath = result.path; // Store the file path
+            quizTitleInput.value = currentQuiz.title;
+
+            // Switch to creator view
+            homeView.classList.add('hidden');
+            takerView.classList.add('hidden');
+            creatorView.classList.remove('hidden');
+
+            // Render the questions for editing
+            renderCreatorQuestions();
+        } else {
+            showNotification('Load cancelled.', 'info');
+        }
+    } catch (error) {
+        console.error('Failed to load quiz for editing:', error);
+        showNotification(`Error: ${error.message}`, 'error');
+    }
+}
+
 // --- Utility Functions ---
 function resetQuiz() {
     currentQuiz = {
         title: '',
         questions: [],
     };
+    currentQuizFilePath = null; // Reset the file path
     if (quizTitleInput) quizTitleInput.value = '';
     if (questionsContainer) questionsContainer.innerHTML = '';
 }
@@ -531,3 +579,28 @@ function showNotification(message, type = 'success') {
         notificationBar.className = notificationBar.className.replace('show', '');
     }, 3000);
 }
+
+// --- Theme Management ---
+const themeCheckbox = document.getElementById('theme-checkbox');
+
+function applyTheme(theme) {
+    if (theme === 'dark') {
+        document.body.classList.add('dark-mode');
+        if (themeCheckbox) themeCheckbox.checked = true;
+    } else {
+        document.body.classList.remove('dark-mode');
+        if (themeCheckbox) themeCheckbox.checked = false;
+    }
+}
+
+if (themeCheckbox) {
+    themeCheckbox.addEventListener('change', () => {
+        const newTheme = themeCheckbox.checked ? 'dark' : 'light';
+        localStorage.setItem('theme', newTheme);
+        applyTheme(newTheme);
+    });
+}
+
+// On initial load, apply the saved theme
+const savedTheme = localStorage.getItem('theme') || 'light';
+applyTheme(savedTheme);

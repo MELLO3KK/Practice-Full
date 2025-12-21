@@ -8,14 +8,21 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<!-- <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet"> -->
 </head>
 <body>
+    <div class="theme-switch-container">
+        <label id="theme-switch" class="theme-switch">
+            <input type="checkbox" id="theme-checkbox">
+            <span class="slider round"></span>
+        </label>
+    </div>
     <div class="view-container">
         <div id="home-view">
             <h1>Quiz Master</h1>
             <div class="home-controls">
                 <button id="go-to-creator-btn">Create a New Quiz</button>
+                <button id="edit-quiz-btn">Edit a Quiz</button>
                 <button id="go-to-taker-btn">Take a Quiz</button>
             </div>
         </div>
@@ -86,6 +93,7 @@
     <div id="notification-bar"></div>
 
     <script src="sortable.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/showdown/2.1.0/showdown.min.js"></script>
     <script src="renderer.js"></script>
 </body>
 </html>
