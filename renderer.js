@@ -313,6 +313,7 @@ async function saveQuiz() {
 // --- Taker View State ---
 let currentQuestionIndex = 0;
 let score = 0;
+let streak = 0;
 let selectedOptionIndex = null;
 let questionQueue = [];
 let questionsAttempted = new Set();
@@ -421,6 +422,12 @@ function checkAnswer() {
         questionsAttempted.add(currentQuestionIndex);
         if (isCorrect) {
             score++;
+            streak++;
+            if ([3, 5, 10].includes(streak)) {
+                showStreakAnimation(streak);
+            }
+        } else {
+            streak = 0;
         }
     }
 
@@ -457,6 +464,21 @@ function nextQuestion() {
     } else {
         showQuizResult();
     }
+}
+
+function showStreakAnimation(streak) {
+    const streakContainer = document.getElementById('streak-container');
+    if (!streakContainer) return;
+
+    const streakMessage = document.createElement('div');
+    streakMessage.className = `streak-animation streak-${streak}`;
+    streakMessage.innerHTML = `🔥 ${streak} in a row!`;
+
+    streakContainer.appendChild(streakMessage);
+
+    setTimeout(() => {
+        streakMessage.remove();
+    }, 3000); // Animation duration
 }
 
 function showQuizResult() {

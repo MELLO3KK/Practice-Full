@@ -202,6 +202,57 @@ button:hover, .btn-primary:hover, .btn-secondary:hover, .btn-save:hover {
     display: flex;
     gap: 15px;
 }
+#streak-container {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 2000;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    pointer-events: none;
+}
+.streak-animation {
+    background: linear-gradient(45deg, #ff6b6b, #feca57, #48dbfb, #1dd1a1);
+    color: white;
+    padding: 15px 30px;
+    border-radius: 50px;
+    font-size: 2em;
+    font-weight: bold;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+    animation: slide-in-out 3s forwards;
+    opacity: 0;
+}
+.streak-animation.streak-3 {
+    background: linear-gradient(45deg, #feca57, #ff9f43);
+}
+.streak-animation.streak-5 {
+    background: linear-gradient(45deg, #48dbfb, #1dd1a1);
+}
+.streak-animation.streak-10 {
+    background: linear-gradient(45deg, #ff6b6b, #ee5253);
+}
+@keyframes slide-in-out {
+    0% {
+        transform: translateY(-100px);
+        opacity: 0;
+    }
+    15% {
+        transform: translateY(0);
+        opacity: 1;
+    }
+    85% {
+        transform: translateY(0);
+        opacity: 1;
+    }
+    100% {
+        transform: translateY(100px);
+        opacity: 0;
+    }
+}
 
 /* --- Theme Switcher --- */
 .theme-switch-container {
