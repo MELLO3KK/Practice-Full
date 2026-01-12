@@ -457,15 +457,26 @@ function checkAnswer() {
 }
 
 function nextQuestion() {
-    questionQueue.shift();
-    if (questionQueue.length > 0) {
-        renderTakerQuiz();
-    } else {
-        showQuizResult();
-    }
+    const takerContent = document.getElementById('taker-content');
+    takerContent.classList.add('fade-out');
+
+    setTimeout(() => {
+        questionQueue.shift();
+        takerContent.classList.remove('fade-out');
+        takerContent.classList.remove('slide-in'); // Remove slide-in before re-rendering
+        if (questionQueue.length > 0) {
+            renderTakerQuiz();
+            // Use a reflow trick to restart the animation
+            void takerContent.offsetWidth;
+            takerContent.classList.add('slide-in');
+        } else {
+            showQuizResult();
+        }
+    }, 500); // Duration of the fade-out animation
 }
 
 function showQuizResult() {
+    const takerContent = document.getElementById('taker-content');
     progressBar.style.width = '100%';
     optionsContainer.innerHTML = '';
     questionText.textContent = '';
@@ -475,6 +486,10 @@ function showQuizResult() {
     nextQuestionBtn.classList.add('hidden');
     if (scoreResult) scoreResult.textContent = `Score: ${score} / ${currentQuiz.questions.length}`;
     if (postQuizActions) postQuizActions.classList.remove('hidden');
+
+    // Animate the result screen
+    void takerContent.offsetWidth;
+    takerContent.classList.add('slide-in');
 }
 
 // --- Taker View Event Listeners ---

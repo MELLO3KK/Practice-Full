@@ -203,6 +203,24 @@ button:hover, .btn-primary:hover, .btn-secondary:hover, .btn-save:hover {
     gap: 15px;
 }
 
+@keyframes fadeOut {
+    from { opacity: 1; }
+    to { opacity: 0; }
+}
+
+@keyframes slideIn {
+    from { transform: translateX(100%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+}
+
+#taker-content.fade-out {
+    animation: fadeOut 0.5s forwards;
+}
+
+#taker-content.slide-in {
+    animation: slideIn 0.5s forwards;
+}
+
 #streak-container {
     display: flex;
     align-items: center;
