@@ -85,6 +85,8 @@ if (restartQuizBtn) {
         questionQueue = currentQuiz.questions.map((_, i) => i);
         questionsAttempted.clear();
         score = 0;
+        streak = 0;
+        updateStreak(0);
         renderTakerQuiz();
     });
 }
@@ -313,6 +315,7 @@ async function saveQuiz() {
 // --- Taker View State ---
 let currentQuestionIndex = 0;
 let score = 0;
+let streak = 0;
 let selectedOptionIndex = null;
 let questionQueue = [];
 let questionsAttempted = new Set();
@@ -437,14 +440,17 @@ function checkAnswer() {
 
     feedbackContainer.classList.remove('hidden');
     if (isCorrect) {
+        streak++;
         feedbackContainer.classList.add('correct-feedback');
         feedbackMessage.innerHTML = '<i class="fas fa-check-circle"></i> Correct!';
         playSound('correct');
     } else {
+        streak = 0;
         feedbackContainer.classList.add('incorrect-feedback');
         feedbackMessage.innerHTML = '<i class="fas fa-times-circle"></i> Incorrect!';
         playSound('wrong');
     }
+    updateStreak(streak);
 
     checkAnswerBtn.style.display = 'none';
     nextQuestionBtn.classList.remove('hidden');
@@ -621,3 +627,16 @@ if (themeCheckbox) {
 // On initial load, apply the saved theme
 const savedTheme = localStorage.getItem('theme') || 'light';
 applyTheme(savedTheme);
+
+function updateStreak(count) {
+    const streakCounter = document.getElementById('streak-counter');
+    streakCounter.textContent = `🔥 ${count}`;
+    streakCounter.classList.remove('streak-animation-3', 'streak-animation-5', 'streak-animation-10');
+    if (count === 3) {
+        streakCounter.classList.add('streak-animation-3');
+    } else if (count === 5) {
+        streakCounter.classList.add('streak-animation-5');
+    } else if (count === 10) {
+        streakCounter.classList.add('streak-animation-10');
+    }
+}

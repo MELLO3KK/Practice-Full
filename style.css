@@ -203,6 +203,45 @@ button:hover, .btn-primary:hover, .btn-secondary:hover, .btn-save:hover {
     gap: 15px;
 }
 
+#streak-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5em;
+    font-weight: bold;
+    color: #ff9800;
+}
+
+.streak-animation-3 {
+    animation: streak-3 1s ease-in-out;
+}
+
+.streak-animation-5 {
+    animation: streak-5 1s ease-in-out;
+}
+
+.streak-animation-10 {
+    animation: streak-10 1s ease-in-out;
+}
+
+@keyframes streak-3 {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.5); }
+    100% { transform: scale(1); }
+}
+
+@keyframes streak-5 {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.7); color: #f44336; }
+    100% { transform: scale(1); }
+}
+
+@keyframes streak-10 {
+    0% { transform: scale(1); }
+    50% { transform: scale(2); color: #9c27b0; }
+    100% { transform: scale(1); }
+}
+
 /* --- Theme Switcher --- */
 .theme-switch-container {
     position: absolute;
