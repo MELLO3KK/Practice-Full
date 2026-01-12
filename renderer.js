@@ -329,6 +329,7 @@ const feedbackContainer = document.getElementById('feedback-container');
 const feedbackMessage = document.getElementById('feedback-message');
 const scoreResult = document.getElementById('score-result');
 const takerCloseBtn = document.getElementById('taker-close-btn');
+const takerContent = document.getElementById('taker-content');
 
 // --- Taker View Functions ---
 function renderTakerQuiz() {
@@ -473,12 +474,23 @@ function updateStreakDisplay() {
 }
 
 function nextQuestion() {
-    questionQueue.shift();
-    if (questionQueue.length > 0) {
-        renderTakerQuiz();
-    } else {
-        showQuizResult();
-    }
+    takerContent.classList.add('fade-out');
+
+    setTimeout(() => {
+        questionQueue.shift();
+        if (questionQueue.length > 0) {
+            renderTakerQuiz();
+            takerContent.classList.remove('fade-out');
+            takerContent.classList.add('fade-in');
+        } else {
+            showQuizResult();
+        }
+
+        // Clean up animation classes
+        setTimeout(() => {
+            takerContent.classList.remove('fade-in', 'fade-out');
+        }, 300);
+    }, 300);
 }
 
 function showQuizResult() {

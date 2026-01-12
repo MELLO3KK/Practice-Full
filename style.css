@@ -203,6 +203,37 @@ button:hover, .btn-primary:hover, .btn-secondary:hover, .btn-save:hover {
     gap: 15px;
 }
 
+/* --- Animation Styles --- */
+.fade-out {
+    animation: fade-out 0.3s ease-out forwards;
+}
+
+.fade-in {
+    animation: fade-in 0.3s ease-in forwards;
+}
+
+@keyframes fade-out {
+    from {
+        opacity: 1;
+        transform: translateY(0);
+    }
+    to {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+}
+
+@keyframes fade-in {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
 /* --- Theme Switcher --- */
 .theme-switch-container {
     position: absolute;
