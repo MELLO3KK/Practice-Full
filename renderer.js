@@ -330,6 +330,7 @@ const feedbackContainer = document.getElementById('feedback-container');
 const feedbackMessage = document.getElementById('feedback-message');
 const scoreResult = document.getElementById('score-result');
 const takerCloseBtn = document.getElementById('taker-close-btn');
+const takerContent = document.getElementById('taker-content');
 
 // --- Taker View Functions ---
 function renderTakerQuiz() {
@@ -396,6 +397,13 @@ function renderTakerQuiz() {
         tile.addEventListener('click', () => selectOption(idx, tile));
         optionsContainer.appendChild(tile);
     });
+
+    // Add the animation class
+    if (takerContent) {
+        takerContent.classList.remove('question-slide-in');
+        void takerContent.offsetWidth; // Trigger reflow
+        takerContent.classList.add('question-slide-in');
+    }
 }
 
 function selectOption(idx, tile) {
