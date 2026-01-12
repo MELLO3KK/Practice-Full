@@ -316,6 +316,7 @@ let score = 0;
 let selectedOptionIndex = null;
 let questionQueue = [];
 let questionsAttempted = new Set();
+let streakCount = 0;
 
 // --- Taker View DOM Elements ---
 const progressBar = document.getElementById('progress-bar');
@@ -421,6 +422,9 @@ function checkAnswer() {
         questionsAttempted.add(currentQuestionIndex);
         if (isCorrect) {
             score++;
+            streakCount++;
+        } else {
+            streakCount = 0;
         }
     }
 
@@ -448,6 +452,24 @@ function checkAnswer() {
 
     checkAnswerBtn.style.display = 'none';
     nextQuestionBtn.classList.remove('hidden');
+    updateStreakDisplay();
+}
+
+function updateStreakDisplay() {
+    const streakCounter = document.getElementById('streak-counter');
+    if (streakCount > 0) {
+        streakCounter.textContent = `${streakCount} Streak!`;
+        streakCounter.classList.remove('streak-animation-3', 'streak-animation-5', 'streak-animation-10');
+        if (streakCount === 3) {
+            streakCounter.classList.add('streak-animation-3');
+        } else if (streakCount === 5) {
+            streakCounter.classList.add('streak-animation-5');
+        } else if (streakCount === 10) {
+            streakCounter.classList.add('streak-animation-10');
+        }
+    } else {
+        streakCounter.textContent = '';
+    }
 }
 
 function nextQuestion() {
