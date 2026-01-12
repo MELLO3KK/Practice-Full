@@ -335,7 +335,13 @@ const scoreResult = document.getElementById('score-result');
 const takerCloseBtn = document.getElementById('taker-close-btn');
 
 // --- Taker View Functions ---
-function renderTakerQuiz() {
+function renderTakerQuiz(isTransition = false) {
+    const takerContent = document.getElementById('taker-content');
+    takerContent.classList.remove('fade-out', 'slide-in');
+    if (isTransition) {
+        takerContent.classList.add('slide-in');
+    }
+
     const converter = new showdown.Converter();
     feedbackContainer.classList.add('hidden');
     feedbackContainer.classList.remove('correct-feedback', 'incorrect-feedback');
@@ -399,6 +405,8 @@ function renderTakerQuiz() {
         tile.addEventListener('click', () => selectOption(idx, tile));
         optionsContainer.appendChild(tile);
     });
+
+    nextQuestionBtn.disabled = false;
 }
 
 function selectOption(idx, tile) {
@@ -483,13 +491,25 @@ function updateStreakCounter() {
     }, { once: true });
 }
 
+let isTransitioning = false;
+
 function nextQuestion() {
-    questionQueue.shift();
-    if (questionQueue.length > 0) {
-        renderTakerQuiz();
-    } else {
-        showQuizResult();
-    }
+    if (isTransitioning) return;
+    isTransitioning = true;
+    nextQuestionBtn.disabled = true;
+
+    const takerContent = document.getElementById('taker-content');
+    takerContent.classList.add('fade-out');
+
+    setTimeout(() => {
+        questionQueue.shift();
+        if (questionQueue.length > 0) {
+            renderTakerQuiz(true);
+        } else {
+            showQuizResult();
+        }
+        isTransitioning = false;
+    }, 300);
 }
 
 function showQuizResult() {
