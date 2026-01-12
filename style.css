@@ -203,6 +203,51 @@ button:hover, .btn-primary:hover, .btn-secondary:hover, .btn-save:hover {
     gap: 15px;
 }
 
+#streak-counter {
+    display: flex;
+    align-items: center;
+    font-size: 1.5em;
+    font-weight: 700;
+    color: #ff9800;
+    margin-right: 20px;
+}
+
+#streak-counter.streak-3 {
+    animation: pop 0.5s, glow-orange 1s;
+}
+
+#streak-counter.streak-5 {
+    animation: pop 0.5s, glow-red 1s;
+}
+
+#streak-counter.streak-10 {
+    animation: pop 0.5s, glow-purple 1s;
+}
+
+@keyframes pop {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.2); }
+    100% { transform: scale(1); }
+}
+
+@keyframes glow-orange {
+    0% { box-shadow: 0 0 5px #ff9800; }
+    50% { box-shadow: 0 0 20px #ff9800; }
+    100% { box-shadow: 0 0 5px #ff9800; }
+}
+
+@keyframes glow-red {
+    0% { box-shadow: 0 0 5px #f44336; }
+    50% { box-shadow: 0 0 20px #f44336; }
+    100% { box-shadow: 0 0 5px #f44336; }
+}
+
+@keyframes glow-purple {
+    0% { box-shadow: 0 0 5px #9c27b0; }
+    50% { box-shadow: 0 0 20px #9c27b0; }
+    100% { box-shadow: 0 0 5px #9c27b0; }
+}
+
 /* --- Theme Switcher --- */
 .theme-switch-container {
     position: absolute;

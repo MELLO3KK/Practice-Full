@@ -85,6 +85,7 @@ if (restartQuizBtn) {
         questionQueue = currentQuiz.questions.map((_, i) => i);
         questionsAttempted.clear();
         score = 0;
+        streak = 0;
         renderTakerQuiz();
     });
 }
@@ -313,6 +314,7 @@ async function saveQuiz() {
 // --- Taker View State ---
 let currentQuestionIndex = 0;
 let score = 0;
+let streak = 0;
 let selectedOptionIndex = null;
 let questionQueue = [];
 let questionsAttempted = new Set();
@@ -421,6 +423,9 @@ function checkAnswer() {
         questionsAttempted.add(currentQuestionIndex);
         if (isCorrect) {
             score++;
+            streak++;
+        } else {
+            streak = 0;
         }
     }
 
@@ -448,6 +453,20 @@ function checkAnswer() {
 
     checkAnswerBtn.style.display = 'none';
     nextQuestionBtn.classList.remove('hidden');
+    updateStreakCounter();
+}
+
+function updateStreakCounter() {
+    const streakCounter = document.getElementById('streak-counter');
+    streakCounter.textContent = `🔥 ${streak}`;
+    streakCounter.className = '';
+    if (streak === 3) {
+        streakCounter.classList.add('streak-3');
+    } else if (streak === 5) {
+        streakCounter.classList.add('streak-5');
+    } else if (streak >= 10) {
+        streakCounter.classList.add('streak-10');
+    }
 }
 
 function nextQuestion() {
@@ -534,6 +553,7 @@ async function loadQuiz() {
             questionQueue = currentQuiz.questions.map((_, i) => i);
             questionsAttempted.clear();
             score = 0;
+            streak = 0;
             renderTakerQuiz();
         } else {
             showNotification('Load cancelled.', 'error');
