@@ -334,6 +334,19 @@ const takerCloseBtn = document.getElementById('taker-close-btn');
 // --- Taker View Functions ---
 function renderTakerQuiz() {
     const converter = new showdown.Converter();
+    const takerContent = document.getElementById('taker-content');
+    let questionContent = takerContent.querySelector('.question-content');
+
+    // Remove the previous question content to reset the animation
+    if (questionContent) {
+        questionContent.remove();
+    }
+
+    // Create a new container for the question
+    questionContent = document.createElement('div');
+    questionContent.className = 'question-content';
+    takerContent.appendChild(questionContent);
+
     feedbackContainer.classList.add('hidden');
     feedbackContainer.classList.remove('correct-feedback', 'incorrect-feedback');
     feedbackMessage.textContent = '';
@@ -353,9 +366,11 @@ function renderTakerQuiz() {
     currentQuestionIndex = questionQueue[0];
     const question = currentQuiz.questions[currentQuestionIndex];
     quizTitle.textContent = currentQuiz.title || 'Quiz';
-    questionText.innerHTML = converter.makeHtml(question.text);
 
-    // Add media display
+    // Create and populate the question area
+    const questionArea = document.createElement('div');
+    questionArea.id = 'taker-question-area';
+
     const mediaContainer = document.createElement('div');
     mediaContainer.className = 'question-media';
     if (question.media) {
@@ -376,31 +391,41 @@ function renderTakerQuiz() {
             mediaContainer.appendChild(audio);
         }
     }
-    const questionArea = document.getElementById('taker-question-area');
-    if (questionArea) {
-        // Remove any previous media
-        const prevMedia = questionArea.querySelector('.question-media');
-        if (prevMedia) prevMedia.remove();
-        questionArea.insertBefore(mediaContainer, questionText);
-    }
+    questionArea.appendChild(mediaContainer);
 
-    const progress = currentQuiz.questions.length > 0 ?
-        (questionsAttempted.size / currentQuiz.questions.length) * 100 : 0;
-    progressBar.style.width = progress + '%';
+    const questionTextElement = document.createElement('p');
+    questionTextElement.id = 'current-question-text';
+    questionTextElement.innerHTML = converter.makeHtml(question.text);
+    questionArea.appendChild(questionTextElement);
 
-    optionsContainer.innerHTML = '';
+    questionContent.appendChild(questionArea);
+
+    // Create and populate the options container
+    const newOptionsContainer = document.createElement('div');
+    newOptionsContainer.id = 'taker-options-container';
     question.options.forEach((option, idx) => {
         const tile = document.createElement('div');
         tile.className = 'option-tile';
         tile.innerHTML = converter.makeHtml(option);
-        tile.addEventListener('click', () => selectOption(idx, tile));
-        optionsContainer.appendChild(tile);
+        tile.addEventListener('click', () => selectOption(idx, tile, newOptionsContainer));
+        newOptionsContainer.appendChild(tile);
+    });
+    questionContent.appendChild(newOptionsContainer);
+
+    // Update progress bar
+    const progress = currentQuiz.questions.length > 0 ?
+        (questionsAttempted.size / currentQuiz.questions.length) * 100 : 0;
+    progressBar.style.width = progress + '%';
+
+    // Trigger the animation
+    requestAnimationFrame(() => {
+        questionContent.classList.add('slide-in');
     });
 }
 
-function selectOption(idx, tile) {
+function selectOption(idx, tile, container) {
     selectedOptionIndex = idx;
-    Array.from(optionsContainer.children).forEach(child => {
+    Array.from(container.children).forEach(child => {
         child.classList.remove('selected');
     });
     tile.classList.add('selected');
@@ -433,12 +458,16 @@ function checkAnswer() {
         questionQueue.push(currentQuestionIndex);
     }
 
-    Array.from(optionsContainer.children).forEach((tile, i) => {
-        tile.classList.remove('selected');
-        if (i === correctIdx) tile.classList.add('correct');
-        if (i === selectedOptionIndex && !isCorrect) tile.classList.add('incorrect');
-        tile.style.pointerEvents = 'none';
-    });
+    const takerContent = document.getElementById('taker-content');
+    const optionsContainer = takerContent.querySelector('#taker-options-container');
+    if (optionsContainer) {
+        Array.from(optionsContainer.children).forEach((tile, i) => {
+            tile.classList.remove('selected');
+            if (i === correctIdx) tile.classList.add('correct');
+            if (i === selectedOptionIndex && !isCorrect) tile.classList.add('incorrect');
+            tile.style.pointerEvents = 'none';
+        });
+    }
 
     feedbackContainer.classList.remove('hidden');
     if (isCorrect) {
@@ -479,9 +508,13 @@ function nextQuestion() {
 }
 
 function showQuizResult() {
+    const takerContent = document.getElementById('taker-content');
+    const questionContent = takerContent.querySelector('.question-content');
+    if (questionContent) {
+        questionContent.innerHTML = '';
+    }
+
     progressBar.style.width = '100%';
-    optionsContainer.innerHTML = '';
-    questionText.textContent = '';
     checkAnswerBtn.style.display = 'none';
     feedbackContainer.classList.remove('hidden', 'correct-feedback', 'incorrect-feedback');
     feedbackMessage.textContent = `Quiz Complete! Your score: ${score} / ${currentQuiz.questions.length}`;

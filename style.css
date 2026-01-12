@@ -203,6 +203,22 @@ button:hover, .btn-primary:hover, .btn-secondary:hover, .btn-save:hover {
     gap: 15px;
 }
 
+/* --- Question Transition Animation --- */
+@keyframes slide-in {
+    from {
+        opacity: 0;
+        transform: translateX(50px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.question-content.slide-in {
+    animation: slide-in 0.5s ease-out forwards;
+}
+
 #streak-counter {
     display: flex;
     align-items: center;
