@@ -203,6 +203,89 @@ button:hover, .btn-primary:hover, .btn-secondary:hover, .btn-save:hover {
     gap: 15px;
 }
 
+/* --- Streak Counter --- */
+#streak-counter {
+    font-size: 1.5em;
+    font-weight: bold;
+    color: #ff9800;
+    margin-right: 20px;
+    display: flex;
+    align-items: center;
+}
+
+#streak-counter.fire::before {
+    content: '🔥';
+    margin-right: 5px;
+    animation: fire-flicker 1s infinite alternate;
+}
+
+#streak-counter.streak-3 {
+    animation: streak-3-animation 0.5s ease-in-out;
+}
+
+#streak-counter.streak-5 {
+    animation: streak-5-animation 0.7s ease-in-out;
+}
+
+#streak-counter.streak-10 {
+    animation: streak-10-animation 1s ease-in-out;
+}
+
+@keyframes fire-flicker {
+    from {
+        opacity: 0.7;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes streak-3-animation {
+    0% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.2);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+@keyframes streak-5-animation {
+    0% {
+        transform: scale(1) rotate(0deg);
+        color: #ff9800;
+    }
+    25% {
+        transform: scale(1.2) rotate(-5deg);
+        color: #ff5722;
+    }
+    75% {
+        transform: scale(1.2) rotate(5deg);
+        color: #ffc107;
+    }
+    100% {
+        transform: scale(1) rotate(0deg);
+        color: #ff9800;
+    }
+}
+
+@keyframes streak-10-animation {
+    0% {
+        transform: scale(1);
+        text-shadow: none;
+    }
+    50% {
+        transform: scale(1.5);
+        text-shadow: 0 0 10px #ffeb3b, 0 0 20px #ffeb3b;
+    }
+    100% {
+        transform: scale(1);
+        text-shadow: none;
+    }
+}
+
 /* --- Theme Switcher --- */
 .theme-switch-container {
     position: absolute;

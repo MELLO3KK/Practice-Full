@@ -85,6 +85,10 @@ if (restartQuizBtn) {
         questionQueue = currentQuiz.questions.map((_, i) => i);
         questionsAttempted.clear();
         score = 0;
+        streak = 0;
+        const streakCounter = document.getElementById('streak-counter');
+        streakCounter.classList.add('hidden');
+        streakCounter.textContent = '';
         renderTakerQuiz();
     });
 }
@@ -316,6 +320,7 @@ let score = 0;
 let selectedOptionIndex = null;
 let questionQueue = [];
 let questionsAttempted = new Set();
+let streak = 0;
 
 // --- Taker View DOM Elements ---
 const progressBar = document.getElementById('progress-bar');
@@ -421,12 +426,17 @@ function checkAnswer() {
         questionsAttempted.add(currentQuestionIndex);
         if (isCorrect) {
             score++;
+            streak++;
+        } else {
+            streak = 0;
         }
     }
 
     if (!isCorrect) {
         questionQueue.push(currentQuestionIndex);
     }
+
+    updateStreakCounter();
 
     Array.from(optionsContainer.children).forEach((tile, i) => {
         tile.classList.remove('selected');
@@ -450,6 +460,29 @@ function checkAnswer() {
     nextQuestionBtn.classList.remove('hidden');
 }
 
+function updateStreakCounter() {
+    const streakCounter = document.getElementById('streak-counter');
+    if (streak > 0) {
+        streakCounter.classList.remove('hidden');
+        streakCounter.textContent = `${streak}`;
+        streakCounter.classList.add('fire');
+
+        if (streak === 3) {
+            streakCounter.classList.add('streak-3');
+        } else if (streak === 5) {
+            streakCounter.classList.add('streak-5');
+        } else if (streak === 10) {
+            streakCounter.classList.add('streak-10');
+        }
+    } else {
+        streakCounter.classList.add('hidden');
+    }
+
+    streakCounter.addEventListener('animationend', () => {
+        streakCounter.classList.remove('streak-3', 'streak-5', 'streak-10');
+    }, { once: true });
+}
+
 function nextQuestion() {
     questionQueue.shift();
     if (questionQueue.length > 0) {
@@ -469,6 +502,10 @@ function showQuizResult() {
     nextQuestionBtn.classList.add('hidden');
     if (scoreResult) scoreResult.textContent = `Score: ${score} / ${currentQuiz.questions.length}`;
     if (postQuizActions) postQuizActions.classList.remove('hidden');
+    const streakCounter = document.getElementById('streak-counter');
+    streakCounter.classList.add('hidden');
+    streakCounter.textContent = '';
+    streak = 0;
 }
 
 // --- Taker View Event Listeners ---
