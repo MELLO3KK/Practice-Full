@@ -85,6 +85,7 @@ if (restartQuizBtn) {
         questionQueue = currentQuiz.questions.map((_, i) => i);
         questionsAttempted.clear();
         score = 0;
+        streak = 0;
         renderTakerQuiz();
     });
 }
@@ -316,6 +317,7 @@ let score = 0;
 let selectedOptionIndex = null;
 let questionQueue = [];
 let questionsAttempted = new Set();
+let streak = 0;
 
 // --- Taker View DOM Elements ---
 const progressBar = document.getElementById('progress-bar');
@@ -417,15 +419,20 @@ function checkAnswer() {
     const correctIdx = question.correctAnswerIndex;
     const isCorrect = selectedOptionIndex === correctIdx;
 
-    if (!questionsAttempted.has(currentQuestionIndex)) {
-        questionsAttempted.add(currentQuestionIndex);
-        if (isCorrect) {
+    if (isCorrect) {
+        streak++;
+        if (!questionsAttempted.has(currentQuestionIndex)) {
             score++;
         }
+    } else {
+        streak = 0;
+        questionQueue.push(currentQuestionIndex);
     }
 
-    if (!isCorrect) {
-        questionQueue.push(currentQuestionIndex);
+    updateStreakCounter();
+
+    if (!questionsAttempted.has(currentQuestionIndex)) {
+        questionsAttempted.add(currentQuestionIndex);
     }
 
     Array.from(optionsContainer.children).forEach((tile, i) => {
@@ -448,6 +455,30 @@ function checkAnswer() {
 
     checkAnswerBtn.style.display = 'none';
     nextQuestionBtn.classList.remove('hidden');
+}
+
+function updateStreakCounter() {
+    const streakCounter = document.getElementById('streak-counter');
+    const streakCount = document.getElementById('streak-count');
+
+    if (streak > 0) {
+        streakCounter.classList.remove('hidden');
+        streakCount.textContent = streak;
+    } else {
+        streakCounter.classList.add('hidden');
+    }
+
+    // Reset animations
+    streakCounter.classList.remove('streak-shake', 'streak-flame', 'streak-inferno');
+
+    // Add animations based on streak
+    if (streak >= 10) {
+        streakCounter.classList.add('streak-inferno');
+    } else if (streak >= 5) {
+        streakCounter.classList.add('streak-flame');
+    } else if (streak >= 3) {
+        streakCounter.classList.add('streak-shake');
+    }
 }
 
 function nextQuestion() {
