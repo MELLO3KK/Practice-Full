@@ -655,3 +655,30 @@ function updateStreak(count) {
         streakCounter.classList.add('streak-animation-10');
     }
 }
+
+// --- Keyboard Shortcuts for Taker View ---
+document.addEventListener('keydown', (event) => {
+    // Check if the taker view is visible
+    if (takerView.classList.contains('hidden')) {
+        return; // Do nothing if the taker view is not active
+    }
+
+    // Handle number keys for option selection
+    const key = parseInt(event.key);
+    if (!isNaN(key) && key >= 1 && key <= 4) {
+        const optionIndex = key - 1;
+        const options = optionsContainer.children;
+        if (optionIndex < options.length) {
+            selectOption(optionIndex, options[optionIndex]);
+        }
+    }
+
+    // Handle Enter key for checking answer or moving to the next question
+    if (event.key === 'Enter') {
+        if (!nextQuestionBtn.classList.contains('hidden')) {
+            nextQuestion();
+        } else if (!checkAnswerBtn.disabled) {
+            checkAnswer();
+        }
+    }
+});
