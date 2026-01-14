@@ -678,3 +678,33 @@ if (themeCheckbox) {
 // On initial load, apply the saved theme
 const savedTheme = localStorage.getItem('theme') || 'light';
 applyTheme(savedTheme);
+
+// --- Taker View Keyboard Shortcuts ---
+function handleTakerKeyboardInput(e) {
+    // Stop if the taker view is not visible
+    if (takerView.classList.contains('hidden')) return;
+
+    // Handle number keys for selecting options
+    if (e.key >= '1' && e.key <= '9') {
+        const optionIndex = parseInt(e.key) - 1;
+        const options = optionsContainer.children;
+        if (optionIndex < options.length) {
+            selectOption(optionIndex, options[optionIndex]);
+        }
+    }
+
+    // Handle 'Enter' key for checking answers or moving to the next question
+    if (e.key === 'Enter') {
+        // If 'Check' button is visible and enabled
+        if (checkAnswerBtn && !checkAnswerBtn.disabled && checkAnswerBtn.offsetParent !== null) {
+            checkAnswerBtn.click();
+        }
+        // If 'Continue' button is visible
+        else if (nextQuestionBtn && !nextQuestionBtn.classList.contains('hidden') && nextQuestionBtn.offsetParent !== null) {
+            nextQuestionBtn.click();
+        }
+    }
+}
+
+// Add document-level event listener for keyboard shortcuts
+document.addEventListener('keydown', handleTakerKeyboardInput);
