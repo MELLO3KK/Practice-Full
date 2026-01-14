@@ -458,12 +458,20 @@ function checkAnswer() {
 }
 
 function nextQuestion() {
-    questionQueue.shift();
-    if (questionQueue.length > 0) {
-        renderTakerQuiz();
-    } else {
-        showQuizResult();
-    }
+    const takerContent = document.getElementById('taker-content');
+    takerContent.classList.add('fade-out');
+    takerContent.classList.remove('fade-in');
+
+    setTimeout(() => {
+        questionQueue.shift();
+        if (questionQueue.length > 0) {
+            renderTakerQuiz();
+        } else {
+            showQuizResult();
+        }
+        takerContent.classList.remove('fade-out');
+        takerContent.classList.add('fade-in');
+    }, 300);
 }
 
 function showStreakAnimation(streak) {

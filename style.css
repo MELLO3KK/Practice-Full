@@ -202,6 +202,41 @@ button:hover, .btn-primary:hover, .btn-secondary:hover, .btn-save:hover {
     display: flex;
     gap: 15px;
 }
+
+/* --- Question Transitions --- */
+.fade-out {
+    opacity: 0;
+}
+
+.fade-in {
+    opacity: 1;
+}
+
+@keyframes fade-out {
+    from {
+        opacity: 1;
+    }
+    to {
+        opacity: 0;
+    }
+}
+
+@keyframes fade-in {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+.question-content.fade-out {
+    animation: fade-out 0.3s forwards;
+}
+
+.question-content.fade-in {
+    animation: fade-in 0.3s forwards;
+}
 #streak-container {
     position: fixed;
     top: 20px;
