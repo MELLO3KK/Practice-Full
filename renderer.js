@@ -660,3 +660,30 @@ if (themeCheckbox) {
 // On initial load, apply the saved theme
 const savedTheme = localStorage.getItem('theme') || 'light';
 applyTheme(savedTheme);
+
+// --- Keyboard Shortcuts for Taker View ---
+document.addEventListener('keydown', (event) => {
+    if (takerView.classList.contains('hidden')) {
+        return; // Don't interfere with other views
+    }
+
+    const key = event.key;
+
+    // Handle number keys 1-9 for selecting options
+    if (key >= '1' && key <= '9') {
+        const optionIndex = parseInt(key) - 1;
+        const optionTiles = optionsContainer.children;
+        if (optionIndex < optionTiles.length) {
+            selectOption(optionIndex, optionTiles[optionIndex]);
+        }
+    }
+
+    // Handle Enter key for confirming answers or moving to the next question
+    if (key === 'Enter') {
+        if (!checkAnswerBtn.classList.contains('hidden') && !checkAnswerBtn.disabled) {
+            checkAnswer();
+        } else if (!nextQuestionBtn.classList.contains('hidden')) {
+            nextQuestion();
+        }
+    }
+});
