@@ -593,6 +593,24 @@ body.dark-mode .dialog-content {
     outline: none;
 }
 
+.group-text-input {
+    width: 100%;
+    padding: 12px 16px;
+    font-size: 1rem;
+    border: 2px solid #e2e8f0;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    background: #f8fafc;
+}
+
+.group-text-input:focus {
+    border-color: #1877f2;
+    box-shadow: 0 0 0 3px rgba(24, 119, 242, 0.15);
+    outline: none;
+    background: white;
+}
+
 /* --- Options Styling --- */
 .options-grid {
     display: grid;
@@ -747,6 +765,16 @@ body.dark-mode .dialog-content {
     text-align: center;
     font-weight: 500;
     line-height: 1.4;
+}
+
+.group-label {
+    font-size: 1.1rem;
+    color: #718096;
+    margin-bottom: 15px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    text-align: center;
 }
 
 #taker-options-container {

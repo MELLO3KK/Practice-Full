@@ -135,7 +135,8 @@ function addQuestion() {
         text: '',
         options: ['', ''],
         correctAnswerIndex: 0,
-        media: null
+        media: null,
+        group: ''
     });
     renderCreatorQuestions();
     saveDraft();
@@ -156,6 +157,7 @@ function renderCreatorQuestions() {
                 <button onclick="deleteQuestion(${index})" class="btn-danger"><i class="fas fa-trash-alt"></i></button>
             </div>
             <input type="text" class="question-text-input" placeholder="Question Text" value="${q.text}" oninput="updateQuestionText(${index}, this.value)">
+            <input type="text" class="group-text-input" placeholder="Group Name (Optional)" value="${q.group || ''}" oninput="updateQuestionGroup(${index}, this.value)">
             <div class="media-upload-container">
                 <div class="media-preview">
                     ${q.media ? `
@@ -240,6 +242,13 @@ function deleteOption(qIndex, oIndex) {
 function updateQuestionText(index, text) {
     if (index >= 0 && index < currentQuiz.questions.length) {
         currentQuiz.questions[index].text = text;
+        saveDraft();
+    }
+}
+
+function updateQuestionGroup(index, group) {
+    if (index >= 0 && index < currentQuiz.questions.length) {
+        currentQuiz.questions[index].group = group;
         saveDraft();
     }
 }
@@ -362,6 +371,18 @@ function renderTakerQuiz(isTransition = false) {
     currentQuestionIndex = questionQueue[0];
     const question = currentQuiz.questions[currentQuestionIndex];
     quizTitle.textContent = currentQuiz.title || 'Quiz';
+
+    // Display group label
+    const groupLabel = document.getElementById('taker-group-label');
+    if (groupLabel) {
+        if (question.group) {
+            groupLabel.textContent = `Group: ${question.group}`;
+            groupLabel.classList.remove('hidden');
+        } else {
+            groupLabel.classList.add('hidden');
+        }
+    }
+
     questionText.innerHTML = converter.makeHtml(question.text);
 
     // Add media display
@@ -441,7 +462,26 @@ function checkAnswer() {
     }
 
     if (!isCorrect) {
-        questionQueue.push(currentQuestionIndex);
+        const currentGroup = currentQuiz.questions[currentQuestionIndex].group || "";
+        let insertIndex = -1;
+
+        // Find the first question in the queue that belongs to a different group
+        for (let i = 1; i < questionQueue.length; i++) {
+            const nextQIndex = questionQueue[i];
+            const nextGroup = (currentQuiz.questions[nextQIndex] && currentQuiz.questions[nextQIndex].group) || "";
+            if (nextGroup !== currentGroup) {
+                insertIndex = i;
+                break;
+            }
+        }
+
+        if (insertIndex === -1) {
+            // All remaining questions are in the same group or the queue is empty
+            questionQueue.push(currentQuestionIndex);
+        } else {
+            // Insert the failed question before the first question of the next group
+            questionQueue.splice(insertIndex, 0, currentQuestionIndex);
+        }
     }
 
     updateStreakCounter();
@@ -576,7 +616,8 @@ async function loadQuiz() {
                     text: q.text || '',
                     options: sanitizedOptions,
                     correctAnswerIndex: correctIdx,
-                    media: q.media || null
+                    media: q.media || null,
+                    group: q.group || ''
                 });
             }
 
