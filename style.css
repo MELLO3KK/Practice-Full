@@ -583,8 +583,19 @@ body.dark-mode .dialog-content {
     font-size: 1.15rem;
     border: 2px solid #e2e8f0;
     border-radius: 10px;
+    margin-bottom: 10px;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.group-text-input {
+    width: 100%;
+    padding: 10px 16px;
+    font-size: 0.95rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
     margin-bottom: 20px;
     transition: border-color 0.2s, box-shadow 0.2s;
+    background: #f8fafc;
 }
 
 .question-text-input:focus {
@@ -737,7 +748,17 @@ body.dark-mode .dialog-content {
     font-weight: 800;
     color: #1c2b33;
     text-align: center;
+    margin-bottom: 10px;
+}
+
+#taker-group-title {
+    font-size: 1.5em;
+    font-weight: 600;
+    color: #1877f2;
+    text-align: center;
     margin-bottom: 35px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
 }
 
 #current-question-text {

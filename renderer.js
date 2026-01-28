@@ -82,7 +82,9 @@ if (quizTitleInput) {
 
 if (restartQuizBtn) {
     restartQuizBtn.addEventListener('click', () => {
-        questionQueue = currentQuiz.questions.map((_, i) => i);
+        quizGroups = groupQuestions(currentQuiz.questions);
+        currentGroupIdx = 0;
+        questionQueue = [...quizGroups[currentGroupIdx]];
         questionsAttempted.clear();
         score = 0;
         streak = 0;
@@ -135,7 +137,8 @@ function addQuestion() {
         text: '',
         options: ['', ''],
         correctAnswerIndex: 0,
-        media: null
+        media: null,
+        group: ""
     });
     renderCreatorQuestions();
     saveDraft();
@@ -156,6 +159,7 @@ function renderCreatorQuestions() {
                 <button onclick="deleteQuestion(${index})" class="btn-danger"><i class="fas fa-trash-alt"></i></button>
             </div>
             <input type="text" class="question-text-input" placeholder="Question Text" value="${q.text}" oninput="updateQuestionText(${index}, this.value)">
+            <input type="text" class="group-text-input" placeholder="Group Name (optional)" value="${q.group || ''}" oninput="updateQuestionGroup(${index}, this.value)">
             <div class="media-upload-container">
                 <div class="media-preview">
                     ${q.media ? `
@@ -244,6 +248,13 @@ function updateQuestionText(index, text) {
     }
 }
 
+function updateQuestionGroup(index, groupName) {
+    if (index >= 0 && index < currentQuiz.questions.length) {
+        currentQuiz.questions[index].group = groupName;
+        saveDraft();
+    }
+}
+
 function updateOptionText(qIndex, oIndex, text) {
     if (qIndex >= 0 && qIndex < currentQuiz.questions.length) {
         const question = currentQuiz.questions[qIndex];
@@ -319,6 +330,8 @@ let currentQuestionIndex = 0;
 let score = 0;
 let selectedOptionIndex = null;
 let questionQueue = [];
+let quizGroups = [];
+let currentGroupIdx = 0;
 let questionsAttempted = new Set();
 let streak = 0;
 
@@ -362,6 +375,12 @@ function renderTakerQuiz(isTransition = false) {
     currentQuestionIndex = questionQueue[0];
     const question = currentQuiz.questions[currentQuestionIndex];
     quizTitle.textContent = currentQuiz.title || 'Quiz';
+
+    const takerGroupTitle = document.getElementById('taker-group-title');
+    if (takerGroupTitle) {
+        takerGroupTitle.textContent = question.group || 'General';
+    }
+
     questionText.innerHTML = converter.makeHtml(question.text);
 
     // Add media display
@@ -506,7 +525,13 @@ function nextQuestion() {
         if (questionQueue.length > 0) {
             renderTakerQuiz(true);
         } else {
-            showQuizResult();
+            currentGroupIdx++;
+            if (currentGroupIdx < quizGroups.length) {
+                questionQueue = [...quizGroups[currentGroupIdx]];
+                renderTakerQuiz(true);
+            } else {
+                showQuizResult();
+            }
         }
         isTransitioning = false;
     }, 300);
@@ -535,6 +560,22 @@ if (takerCloseBtn) takerCloseBtn.addEventListener('click', () => {
     takerView.classList.add('hidden');
     homeView.classList.remove('hidden');
 });
+
+function groupQuestions(questions) {
+    const groupsMap = new Map();
+    const groupOrder = [];
+
+    questions.forEach((q, index) => {
+        const groupName = q.group || 'General';
+        if (!groupsMap.has(groupName)) {
+            groupsMap.set(groupName, []);
+            groupOrder.push(groupName);
+        }
+        groupsMap.get(groupName).push(index);
+    });
+
+    return groupOrder.map(name => groupsMap.get(name));
+}
 
 // --- Load Quiz Function ---
 async function loadQuiz() {
@@ -576,7 +617,8 @@ async function loadQuiz() {
                     text: q.text || '',
                     options: sanitizedOptions,
                     correctAnswerIndex: correctIdx,
-                    media: q.media || null
+                    media: q.media || null,
+                    group: q.group || ''
                 });
             }
 
@@ -588,7 +630,11 @@ async function loadQuiz() {
             // Proceed to show quiz
             homeView.classList.add('hidden');
             takerView.classList.remove('hidden');
-            questionQueue = currentQuiz.questions.map((_, i) => i);
+
+            quizGroups = groupQuestions(currentQuiz.questions);
+            currentGroupIdx = 0;
+            questionQueue = [...quizGroups[currentGroupIdx]];
+
             questionsAttempted.clear();
             score = 0;
             renderTakerQuiz();
