@@ -84,6 +84,7 @@ if (restartQuizBtn) {
     restartQuizBtn.addEventListener('click', () => {
         currentQuestionIndex = 0;
         score = 0;
+        isFirstAttemptAtQuestion = true;
         renderTakerQuiz();
     });
 }
@@ -130,7 +131,8 @@ function addQuestion() {
         text: '',
         options: ['', ''],
         correctAnswerIndex: 0,
-        media: null
+        media: null,
+        group: 'Group 1'
     });
     renderCreatorQuestions();
     saveDraft();
@@ -151,6 +153,10 @@ function renderCreatorQuestions() {
                 <button onclick="deleteQuestion(${index})" class="btn-danger"><i class="fas fa-trash-alt"></i></button>
             </div>
             <input type="text" class="question-text-input" placeholder="Question Text" value="${q.text}" oninput="updateQuestionText(${index}, this.value)">
+            <div class="group-input-container">
+                <label>Group:</label>
+                <input type="text" class="question-group-input" placeholder="Group Name" value="${q.group || ''}" oninput="updateQuestionGroup(${index}, this.value)">
+            </div>
             <div class="media-upload-container">
                 <div class="media-preview">
                     ${q.media ? `
@@ -239,6 +245,13 @@ function updateQuestionText(index, text) {
     }
 }
 
+function updateQuestionGroup(index, group) {
+    if (index >= 0 && index < currentQuiz.questions.length) {
+        currentQuiz.questions[index].group = group;
+        saveDraft();
+    }
+}
+
 function updateOptionText(qIndex, oIndex, text) {
     if (qIndex >= 0 && qIndex < currentQuiz.questions.length) {
         const question = currentQuiz.questions[qIndex];
@@ -313,6 +326,7 @@ async function saveQuiz() {
 let currentQuestionIndex = 0;
 let score = 0;
 let selectedOptionIndex = null;
+let isFirstAttemptAtQuestion = true;
 
 // --- Taker View DOM Elements ---
 const progressBar = document.getElementById('progress-bar');
@@ -333,6 +347,7 @@ function renderTakerQuiz() {
     feedbackContainer.classList.remove('correct-feedback', 'incorrect-feedback');
     feedbackMessage.textContent = '';
     nextQuestionBtn.classList.add('hidden');
+    nextQuestionBtn.textContent = 'Continue';
     checkAnswerBtn.disabled = true;
     checkAnswerBtn.style.display = '';
     selectedOptionIndex = null;
@@ -347,6 +362,13 @@ function renderTakerQuiz() {
 
     const question = currentQuiz.questions[currentQuestionIndex];
     quizTitle.textContent = currentQuiz.title || 'Quiz';
+
+    // Display group name
+    const groupDisplay = document.getElementById('taker-group-name');
+    if (groupDisplay) {
+        groupDisplay.textContent = `Group: ${question.group || 'General'}`;
+    }
+
     questionText.innerHTML = converter.makeHtml(question.text);
 
     // Add media display
@@ -411,12 +433,24 @@ function checkAnswer() {
     const question = currentQuiz.questions[currentQuestionIndex];
     const correctIdx = question.correctAnswerIndex;
     const correct = selectedOptionIndex === correctIdx;
-    if (correct) score++;
+
+    // Only increment score if correct on first attempt
+    if (correct && isFirstAttemptAtQuestion) {
+        score++;
+    }
+
+    if (!correct) {
+        isFirstAttemptAtQuestion = false;
+    }
 
     Array.from(optionsContainer.children).forEach((tile, i) => {
         tile.classList.remove('selected');
-        if (i === correctIdx) tile.classList.add('correct');
-        if (i === selectedOptionIndex && !correct) tile.classList.add('incorrect');
+        if (correct) {
+            if (i === correctIdx) tile.classList.add('correct');
+        } else {
+            if (i === selectedOptionIndex) tile.classList.add('incorrect');
+            // Do NOT show the correct answer if wrong, to force "re-answer"
+        }
         tile.style.pointerEvents = 'none';
     });
 
@@ -425,17 +459,24 @@ function checkAnswer() {
         feedbackContainer.classList.add('correct-feedback');
         feedbackMessage.innerHTML = '<i class="fas fa-check-circle"></i> Correct!';
         playSound('correct');
+        nextQuestionBtn.textContent = 'Continue';
     } else {
         feedbackContainer.classList.add('incorrect-feedback');
-        feedbackMessage.innerHTML = '<i class="fas fa-times-circle"></i> Incorrect!';
+        feedbackMessage.innerHTML = '<i class="fas fa-times-circle"></i> Incorrect! Try again.';
         playSound('wrong');
+        nextQuestionBtn.textContent = 'Try Again';
     }
     checkAnswerBtn.style.display = 'none';
     nextQuestionBtn.classList.remove('hidden');
 }
 
 function nextQuestion() {
+    if (nextQuestionBtn.textContent === 'Try Again') {
+        renderTakerQuiz();
+        return;
+    }
     currentQuestionIndex++;
+    isFirstAttemptAtQuestion = true;
     if (currentQuestionIndex < currentQuiz.questions.length) {
         renderTakerQuiz();
     } else {
@@ -503,9 +544,13 @@ async function loadQuiz() {
                     text: q.text || '',
                     options: sanitizedOptions,
                     correctAnswerIndex: correctIdx,
-                    media: q.media || null
+                    media: q.media || null,
+                    group: q.group || 'Group 1'
                 });
             }
+
+            // Group questions by their group name
+            currentQuiz.questions.sort((a, b) => (a.group || "").localeCompare(b.group || ""));
 
             // Final validation
             if (currentQuiz.questions.length === 0) {
@@ -543,6 +588,11 @@ async function loadQuizForEditing() {
             currentQuiz = loadedQuiz;
             currentQuizFilePath = result.path; // Store the file path
             quizTitleInput.value = currentQuiz.title;
+
+            // Ensure all questions have a group property
+            currentQuiz.questions.forEach(q => {
+                if (!q.group) q.group = 'Group 1';
+            });
 
             // Switch to creator view
             homeView.classList.add('hidden');
