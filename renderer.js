@@ -82,7 +82,7 @@ if (quizTitleInput) {
 
 if (restartQuizBtn) {
     restartQuizBtn.addEventListener('click', () => {
-        questionQueue = currentQuiz.questions.map((_, i) => i);
+        initializeGroups();
         questionsAttempted.clear();
         score = 0;
         streak = 0;
@@ -133,12 +133,20 @@ function showCreatorView() {
 function addQuestion() {
     currentQuiz.questions.push({
         text: '',
+        group: '',
         options: ['', ''],
         correctAnswerIndex: 0,
         media: null
     });
     renderCreatorQuestions();
     saveDraft();
+}
+
+function updateQuestionGroup(index, group) {
+    if (index >= 0 && index < currentQuiz.questions.length) {
+        currentQuiz.questions[index].group = group;
+        saveDraft();
+    }
 }
 
 function renderCreatorQuestions() {
@@ -156,6 +164,7 @@ function renderCreatorQuestions() {
                 <button onclick="deleteQuestion(${index})" class="btn-danger"><i class="fas fa-trash-alt"></i></button>
             </div>
             <input type="text" class="question-text-input" placeholder="Question Text" value="${q.text}" oninput="updateQuestionText(${index}, this.value)">
+            <input type="text" class="group-text-input" placeholder="Group (optional)" value="${q.group || ''}" oninput="updateQuestionGroup(${index}, this.value)">
             <div class="media-upload-container">
                 <div class="media-preview">
                     ${q.media ? `
@@ -321,6 +330,24 @@ let selectedOptionIndex = null;
 let questionQueue = [];
 let questionsAttempted = new Set();
 let streak = 0;
+let quizGroups = [];
+let currentGroupIndex = 0;
+
+function initializeGroups() {
+    quizGroups = [];
+    const groupMap = new Map();
+    currentQuiz.questions.forEach((q, i) => {
+        const g = q.group || '';
+        if (!groupMap.has(g)) {
+            const newGroup = [];
+            quizGroups.push(newGroup);
+            groupMap.set(g, newGroup);
+        }
+        groupMap.get(g).push(i);
+    });
+    currentGroupIndex = 0;
+    questionQueue = quizGroups.length > 0 ? [...quizGroups[0]] : [];
+}
 
 // --- Taker View DOM Elements ---
 const progressBar = document.getElementById('progress-bar');
@@ -506,7 +533,13 @@ function nextQuestion() {
         if (questionQueue.length > 0) {
             renderTakerQuiz(true);
         } else {
-            showQuizResult();
+            currentGroupIndex++;
+            if (currentGroupIndex < quizGroups.length) {
+                questionQueue = [...quizGroups[currentGroupIndex]];
+                renderTakerQuiz(true);
+            } else {
+                showQuizResult();
+            }
         }
         isTransitioning = false;
     }, 300);
@@ -574,6 +607,7 @@ async function loadQuiz() {
 
                 currentQuiz.questions.push({
                     text: q.text || '',
+                    group: q.group || '',
                     options: sanitizedOptions,
                     correctAnswerIndex: correctIdx,
                     media: q.media || null
@@ -588,7 +622,7 @@ async function loadQuiz() {
             // Proceed to show quiz
             homeView.classList.add('hidden');
             takerView.classList.remove('hidden');
-            questionQueue = currentQuiz.questions.map((_, i) => i);
+            initializeGroups();
             questionsAttempted.clear();
             score = 0;
             renderTakerQuiz();
