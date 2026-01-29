@@ -119,7 +119,13 @@ discardDraftBtn.addEventListener('click', () => {
 
 function saveDraft() {
     currentQuiz.title = quizTitleInput.value;
-    localStorage.setItem('quizDraft', JSON.stringify(currentQuiz));
+    localStorage.setItem('quizDraft', JSON.stringify(currentQuiz, function (key, value) {
+        if (value === null || value === '') {
+            if (Array.isArray(this)) return value;
+            return undefined;
+        }
+        return value;
+    }));
 }
 
 function showCreatorView() {
@@ -301,7 +307,13 @@ async function saveQuiz() {
     }
 
     // Proceed with saving
-    const jsonString = JSON.stringify(currentQuiz, null, 2);
+    const jsonString = JSON.stringify(currentQuiz, function (key, value) {
+        if (value === null || value === '') {
+            if (Array.isArray(this)) return value;
+            return undefined;
+        }
+        return value;
+    });
     let result;
 
     if (currentQuizFilePath) {
