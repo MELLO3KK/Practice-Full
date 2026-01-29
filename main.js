@@ -2,6 +2,25 @@ const { app, BrowserWindow, ipcMain, dialog } = require('electron');
 const path = require('path');
 const fs = require('fs');
 
+/**
+ * Recursively removes properties with null, undefined, or empty string values from an object.
+ * Preserves array elements to maintain structure.
+ */
+function compressQuiz(obj) {
+    if (Array.isArray(obj)) {
+        return obj.map(compressQuiz);
+    } else if (typeof obj === 'object' && obj !== null) {
+        const newObj = {};
+        for (const [key, value] of Object.entries(obj)) {
+            if (value !== null && value !== undefined && value !== '') {
+                newObj[key] = compressQuiz(value);
+            }
+        }
+        return newObj;
+    }
+    return obj;
+}
+
 // Function to create the main application window
 const createWindow = () => {
     const win = new BrowserWindow({
@@ -72,8 +91,9 @@ ipcMain.handle('save-quiz', async (event, quizDataString) => {
                 }
             }
 
-            // Save the updated quiz data (with relative paths) to the JSON file
-            fs.writeFileSync(filePath, JSON.stringify(quizData, null, 2));
+            // Clean and compress the quiz data before saving
+            const cleanedData = compressQuiz(quizData);
+            fs.writeFileSync(filePath, JSON.stringify(cleanedData));
             return { success: true, path: filePath };
         } catch (error) {
             console.error('Failed to save quiz:', error);
@@ -114,8 +134,9 @@ ipcMain.handle('update-quiz', async (event, { quizDataString, filePath }) => {
                 }
             }
 
-            // Save the updated quiz data (with relative paths) to the JSON file
-            fs.writeFileSync(filePath, JSON.stringify(quizData, null, 2));
+            // Clean and compress the quiz data before saving
+            const cleanedData = compressQuiz(quizData);
+            fs.writeFileSync(filePath, JSON.stringify(cleanedData));
             return { success: true, path: filePath };
         } catch (error) {
             console.error('Failed to update quiz:', error);

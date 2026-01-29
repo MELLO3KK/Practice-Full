@@ -301,7 +301,7 @@ async function saveQuiz() {
     }
 
     // Proceed with saving
-    const jsonString = JSON.stringify(currentQuiz, null, 2);
+    const jsonString = JSON.stringify(currentQuiz);
     let result;
 
     if (currentQuizFilePath) {
