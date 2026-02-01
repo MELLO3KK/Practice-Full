@@ -54,7 +54,7 @@ ipcMain.handle('save-quiz', async (event, quizDataString) => {
                 fs.mkdirSync(mediaDirPath, { recursive: true });
             }
 
-            // Process media files
+            // Process media files and clean up
             for (const question of quizData.questions) {
                 if (question.media && question.media.url && question.media.url.startsWith('data:')) {
                     const dataUrl = question.media.url;
@@ -70,10 +70,14 @@ ipcMain.handle('save-quiz', async (event, quizDataString) => {
                         question.media.url = `./${mediaDirName}/${mediaFileName}`;
                     }
                 }
+
+                // Remove unneeded items
+                if (question.media === null) delete question.media;
+                if (question.group === null || question.group === '') delete question.group;
             }
 
             // Save the updated quiz data (with relative paths) to the JSON file
-            fs.writeFileSync(filePath, JSON.stringify(quizData, null, 2));
+            fs.writeFileSync(filePath, JSON.stringify(quizData));
             return { success: true, path: filePath };
         } catch (error) {
             console.error('Failed to save quiz:', error);
@@ -96,7 +100,7 @@ ipcMain.handle('update-quiz', async (event, { quizDataString, filePath }) => {
                 fs.mkdirSync(mediaDirPath, { recursive: true });
             }
 
-            // Process media files
+            // Process media files and clean up
             for (const question of quizData.questions) {
                 if (question.media && question.media.url && question.media.url.startsWith('data:')) {
                     const dataUrl = question.media.url;
@@ -112,10 +116,14 @@ ipcMain.handle('update-quiz', async (event, { quizDataString, filePath }) => {
                         question.media.url = `./${mediaDirName}/${mediaFileName}`;
                     }
                 }
+
+                // Remove unneeded items
+                if (question.media === null) delete question.media;
+                if (question.group === null || question.group === '') delete question.group;
             }
 
             // Save the updated quiz data (with relative paths) to the JSON file
-            fs.writeFileSync(filePath, JSON.stringify(quizData, null, 2));
+            fs.writeFileSync(filePath, JSON.stringify(quizData));
             return { success: true, path: filePath };
         } catch (error) {
             console.error('Failed to update quiz:', error);
