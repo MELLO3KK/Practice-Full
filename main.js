@@ -35,6 +35,17 @@ app.on('window-all-closed', () => {
 
 // --- IPC Handlers for File Operations ---
 
+/**
+ * Replacer function for JSON.stringify to remove null or empty string values from objects,
+ * but preserve them in arrays to maintain indices.
+ */
+const jsonReplacer = function(key, value) {
+    if ((value === null || value === '') && !Array.isArray(this)) {
+        return undefined;
+    }
+    return value;
+};
+
 // Handle request to save a quiz
 ipcMain.handle('save-quiz', async (event, quizDataString) => {
     const { filePath } = await dialog.showSaveDialog({
@@ -73,7 +84,7 @@ ipcMain.handle('save-quiz', async (event, quizDataString) => {
             }
 
             // Save the updated quiz data (with relative paths) to the JSON file
-            fs.writeFileSync(filePath, JSON.stringify(quizData, null, 2));
+            fs.writeFileSync(filePath, JSON.stringify(quizData, jsonReplacer));
             return { success: true, path: filePath };
         } catch (error) {
             console.error('Failed to save quiz:', error);
@@ -115,7 +126,7 @@ ipcMain.handle('update-quiz', async (event, { quizDataString, filePath }) => {
             }
 
             // Save the updated quiz data (with relative paths) to the JSON file
-            fs.writeFileSync(filePath, JSON.stringify(quizData, null, 2));
+            fs.writeFileSync(filePath, JSON.stringify(quizData, jsonReplacer));
             return { success: true, path: filePath };
         } catch (error) {
             console.error('Failed to update quiz:', error);
