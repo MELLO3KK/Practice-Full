@@ -35,6 +35,13 @@ app.on('window-all-closed', () => {
 
 // --- IPC Handlers for File Operations ---
 
+const jsonReplacer = function(key, value) {
+    if (value === null || value === '' || value === undefined) {
+        return Array.isArray(this) ? value : undefined;
+    }
+    return value;
+};
+
 // Handle request to save a quiz
 ipcMain.handle('save-quiz', async (event, quizDataString) => {
     const { filePath } = await dialog.showSaveDialog({
@@ -73,7 +80,7 @@ ipcMain.handle('save-quiz', async (event, quizDataString) => {
             }
 
             // Save the updated quiz data (with relative paths) to the JSON file
-            fs.writeFileSync(filePath, JSON.stringify(quizData, null, 2));
+            fs.writeFileSync(filePath, JSON.stringify(quizData, jsonReplacer));
             return { success: true, path: filePath };
         } catch (error) {
             console.error('Failed to save quiz:', error);
@@ -115,7 +122,7 @@ ipcMain.handle('update-quiz', async (event, { quizDataString, filePath }) => {
             }
 
             // Save the updated quiz data (with relative paths) to the JSON file
-            fs.writeFileSync(filePath, JSON.stringify(quizData, null, 2));
+            fs.writeFileSync(filePath, JSON.stringify(quizData, jsonReplacer));
             return { success: true, path: filePath };
         } catch (error) {
             console.error('Failed to update quiz:', error);
@@ -155,7 +162,7 @@ ipcMain.handle('load-quiz', async () => {
                     }
                 }
             }
-            return { success: true, data: JSON.stringify(quizData), path: filePath };
+            return { success: true, data: JSON.stringify(quizData, jsonReplacer), path: filePath };
         } catch (error) {
             console.error('Failed to load or process quiz:', error);
             return { success: false, error: error.message };

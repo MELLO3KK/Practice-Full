@@ -1,3 +1,11 @@
+// --- JSON Utilities ---
+const jsonReplacer = function(key, value) {
+    if (value === null || value === '' || value === undefined) {
+        return Array.isArray(this) ? value : undefined;
+    }
+    return value;
+};
+
 // --- Media Upload Functions ---
 function handleMediaUpload(qIndex, fileInput) {
     const file = fileInput.files[0];
@@ -119,7 +127,7 @@ discardDraftBtn.addEventListener('click', () => {
 
 function saveDraft() {
     currentQuiz.title = quizTitleInput.value;
-    localStorage.setItem('quizDraft', JSON.stringify(currentQuiz));
+    localStorage.setItem('quizDraft', JSON.stringify(currentQuiz, jsonReplacer));
 }
 
 function showCreatorView() {
@@ -301,7 +309,7 @@ async function saveQuiz() {
     }
 
     // Proceed with saving
-    const jsonString = JSON.stringify(currentQuiz, null, 2);
+    const jsonString = JSON.stringify(currentQuiz, jsonReplacer);
     let result;
 
     if (currentQuizFilePath) {
