@@ -593,6 +593,22 @@ body.dark-mode .dialog-content {
     outline: none;
 }
 
+.question-group-input {
+    width: 100%;
+    padding: 12px;
+    font-size: 1rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.question-group-input:focus {
+    border-color: #1877f2;
+    box-shadow: 0 0 0 3px rgba(24, 119, 242, 0.15);
+    outline: none;
+}
+
 /* --- Options Styling --- */
 .options-grid {
     display: grid;

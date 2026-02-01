@@ -82,7 +82,7 @@ if (quizTitleInput) {
 
 if (restartQuizBtn) {
     restartQuizBtn.addEventListener('click', () => {
-        questionQueue = currentQuiz.questions.map((_, i) => i);
+        initializeGroups();
         questionsAttempted.clear();
         score = 0;
         streak = 0;
@@ -133,6 +133,7 @@ function showCreatorView() {
 function addQuestion() {
     currentQuiz.questions.push({
         text: '',
+        group: '',
         options: ['', ''],
         correctAnswerIndex: 0,
         media: null
@@ -156,6 +157,7 @@ function renderCreatorQuestions() {
                 <button onclick="deleteQuestion(${index})" class="btn-danger"><i class="fas fa-trash-alt"></i></button>
             </div>
             <input type="text" class="question-text-input" placeholder="Question Text" value="${q.text}" oninput="updateQuestionText(${index}, this.value)">
+            <input type="text" class="question-group-input" placeholder="Group Name (optional)" value="${q.group || ''}" oninput="updateQuestionGroup(${index}, this.value)">
             <div class="media-upload-container">
                 <div class="media-preview">
                     ${q.media ? `
@@ -244,6 +246,13 @@ function updateQuestionText(index, text) {
     }
 }
 
+function updateQuestionGroup(index, group) {
+    if (index >= 0 && index < currentQuiz.questions.length) {
+        currentQuiz.questions[index].group = group;
+        saveDraft();
+    }
+}
+
 function updateOptionText(qIndex, oIndex, text) {
     if (qIndex >= 0 && qIndex < currentQuiz.questions.length) {
         const question = currentQuiz.questions[qIndex];
@@ -319,6 +328,8 @@ let currentQuestionIndex = 0;
 let score = 0;
 let selectedOptionIndex = null;
 let questionQueue = [];
+let allGroups = [];
+let currentGroupIndex = 0;
 let questionsAttempted = new Set();
 let streak = 0;
 
@@ -335,6 +346,22 @@ const scoreResult = document.getElementById('score-result');
 const takerCloseBtn = document.getElementById('taker-close-btn');
 
 // --- Taker View Functions ---
+function initializeGroups() {
+    const groupsMap = {};
+    const groupOrder = [];
+    currentQuiz.questions.forEach((q, i) => {
+        const groupName = q.group || 'Default';
+        if (!groupsMap[groupName]) {
+            groupsMap[groupName] = [];
+            groupOrder.push(groupName);
+        }
+        groupsMap[groupName].push(i);
+    });
+    allGroups = groupOrder.map(name => groupsMap[name]);
+    currentGroupIndex = 0;
+    questionQueue = allGroups.length > 0 ? [...allGroups[currentGroupIndex]] : [];
+}
+
 function renderTakerQuiz(isTransition = false) {
     const takerContent = document.getElementById('taker-content');
     takerContent.classList.remove('fade-out', 'slide-in');
@@ -506,7 +533,13 @@ function nextQuestion() {
         if (questionQueue.length > 0) {
             renderTakerQuiz(true);
         } else {
-            showQuizResult();
+            currentGroupIndex++;
+            if (currentGroupIndex < allGroups.length) {
+                questionQueue = [...allGroups[currentGroupIndex]];
+                renderTakerQuiz(true);
+            } else {
+                showQuizResult();
+            }
         }
         isTransitioning = false;
     }, 300);
@@ -574,6 +607,7 @@ async function loadQuiz() {
 
                 currentQuiz.questions.push({
                     text: q.text || '',
+                    group: q.group || '',
                     options: sanitizedOptions,
                     correctAnswerIndex: correctIdx,
                     media: q.media || null
@@ -588,7 +622,7 @@ async function loadQuiz() {
             // Proceed to show quiz
             homeView.classList.add('hidden');
             takerView.classList.remove('hidden');
-            questionQueue = currentQuiz.questions.map((_, i) => i);
+            initializeGroups();
             questionsAttempted.clear();
             score = 0;
             renderTakerQuiz();
