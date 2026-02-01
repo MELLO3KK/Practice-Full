@@ -73,7 +73,14 @@ ipcMain.handle('save-quiz', async (event, quizDataString) => {
             }
 
             // Save the updated quiz data (with relative paths) to the JSON file
-            fs.writeFileSync(filePath, JSON.stringify(quizData, null, 2));
+            const compressedData = JSON.stringify(quizData, function(key, value) {
+                if (value === null || value === '') {
+                    if (Array.isArray(this)) return value;
+                    return undefined;
+                }
+                return value;
+            });
+            fs.writeFileSync(filePath, compressedData);
             return { success: true, path: filePath };
         } catch (error) {
             console.error('Failed to save quiz:', error);
@@ -115,7 +122,14 @@ ipcMain.handle('update-quiz', async (event, { quizDataString, filePath }) => {
             }
 
             // Save the updated quiz data (with relative paths) to the JSON file
-            fs.writeFileSync(filePath, JSON.stringify(quizData, null, 2));
+            const compressedData = JSON.stringify(quizData, function(key, value) {
+                if (value === null || value === '') {
+                    if (Array.isArray(this)) return value;
+                    return undefined;
+                }
+                return value;
+            });
+            fs.writeFileSync(filePath, compressedData);
             return { success: true, path: filePath };
         } catch (error) {
             console.error('Failed to update quiz:', error);
