@@ -2,6 +2,16 @@ const { app, BrowserWindow, ipcMain, dialog } = require('electron');
 const path = require('path');
 const fs = require('fs');
 
+const jsonReplacer = function(key, value) {
+    if (value === null || value === '') {
+        if (Array.isArray(this)) {
+            return value;
+        }
+        return undefined;
+    }
+    return value;
+};
+
 // Function to create the main application window
 const createWindow = () => {
     const win = new BrowserWindow({
@@ -73,7 +83,7 @@ ipcMain.handle('save-quiz', async (event, quizDataString) => {
             }
 
             // Save the updated quiz data (with relative paths) to the JSON file
-            fs.writeFileSync(filePath, JSON.stringify(quizData, null, 2));
+            fs.writeFileSync(filePath, JSON.stringify(quizData, jsonReplacer));
             return { success: true, path: filePath };
         } catch (error) {
             console.error('Failed to save quiz:', error);
@@ -115,7 +125,7 @@ ipcMain.handle('update-quiz', async (event, { quizDataString, filePath }) => {
             }
 
             // Save the updated quiz data (with relative paths) to the JSON file
-            fs.writeFileSync(filePath, JSON.stringify(quizData, null, 2));
+            fs.writeFileSync(filePath, JSON.stringify(quizData, jsonReplacer));
             return { success: true, path: filePath };
         } catch (error) {
             console.error('Failed to update quiz:', error);
@@ -155,7 +165,7 @@ ipcMain.handle('load-quiz', async () => {
                     }
                 }
             }
-            return { success: true, data: JSON.stringify(quizData), path: filePath };
+            return { success: true, data: JSON.stringify(quizData, jsonReplacer), path: filePath };
         } catch (error) {
             console.error('Failed to load or process quiz:', error);
             return { success: false, error: error.message };
