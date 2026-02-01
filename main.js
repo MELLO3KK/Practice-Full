@@ -35,6 +35,11 @@ app.on('window-all-closed', () => {
 
 // --- IPC Handlers for File Operations ---
 
+const jsonReplacer = (key, value) => {
+    if (key !== '' && (value === null || value === '') && isNaN(key)) return undefined;
+    return value;
+};
+
 // Handle request to save a quiz
 ipcMain.handle('save-quiz', async (event, quizDataString) => {
     const { filePath } = await dialog.showSaveDialog({
@@ -73,7 +78,8 @@ ipcMain.handle('save-quiz', async (event, quizDataString) => {
             }
 
             // Save the updated quiz data (with relative paths) to the JSON file
-            fs.writeFileSync(filePath, JSON.stringify(quizData, null, 2));
+            const compressedData = JSON.stringify(quizData, jsonReplacer);
+            fs.writeFileSync(filePath, compressedData);
             return { success: true, path: filePath };
         } catch (error) {
             console.error('Failed to save quiz:', error);
@@ -115,7 +121,8 @@ ipcMain.handle('update-quiz', async (event, { quizDataString, filePath }) => {
             }
 
             // Save the updated quiz data (with relative paths) to the JSON file
-            fs.writeFileSync(filePath, JSON.stringify(quizData, null, 2));
+            const compressedData = JSON.stringify(quizData, jsonReplacer);
+            fs.writeFileSync(filePath, compressedData);
             return { success: true, path: filePath };
         } catch (error) {
             console.error('Failed to update quiz:', error);
