@@ -11,6 +11,54 @@
 <!-- <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet"> -->
 </head>
 <body>
+    <div id="particles-container"></div>
+    <div id="confetti-container"></div>
+    <div id="streak-container"><span id="streak-fire">🔥</span> <span id="streak-count">0</span> Streak!</div>
+    <div id="timer-container"><i class="fas fa-clock"></i> <span id="timer-display">00:00</span></div>
+    <div id="autosave-indicator"><i class="fas fa-sync-alt"></i> <span>Saving...</span></div>
+
+    <button id="settings-btn" data-tooltip="Settings"><i class="fas fa-cog"></i></button>
+    <div id="settings-panel">
+        <h3><i class="fas fa-sliders-h"></i> Settings</h3>
+        <div class="setting-row">
+            <label>Sound Effects</label>
+            <label class="toggle-switch">
+                <input type="checkbox" id="sound-toggle" checked>
+                <span class="toggle-slider"></span>
+            </label>
+        </div>
+        <div class="setting-row">
+            <label>Timer Mode</label>
+            <label class="toggle-switch">
+                <input type="checkbox" id="timer-toggle">
+                <span class="toggle-slider"></span>
+            </label>
+        </div>
+        <div class="setting-row">
+            <label>Shuffle Questions</label>
+            <label class="toggle-switch">
+                <input type="checkbox" id="shuffle-toggle">
+                <span class="toggle-slider"></span>
+            </label>
+        </div>
+        <div class="setting-row">
+            <label>Keyboard Shortcuts</label>
+            <label class="toggle-switch">
+                <input type="checkbox" id="keyboard-toggle" checked>
+                <span class="toggle-slider"></span>
+            </label>
+        </div>
+        <div class="setting-row" style="flex-direction: column; align-items: flex-start; gap: 8px;">
+            <label>Time per Question</label>
+            <select id="timer-duration" style="width: 100%; padding: 8px; border-radius: 8px; border: 1px solid #ddd;">
+                <option value="15">15 seconds</option>
+                <option value="30" selected>30 seconds</option>
+                <option value="60">60 seconds</option>
+                <option value="90">90 seconds</option>
+            </select>
+        </div>
+    </div>
+
     <div class="theme-switch-container">
         <label id="theme-switch" class="theme-switch">
             <input type="checkbox" id="theme-checkbox">
@@ -43,6 +91,25 @@
                 <input type="text" id="quiz-title" placeholder="Enter Your Quiz Title Here...">
             </div>
             <div id="questions-container" class="sortable-list"></div>
+
+            <div id="add-question-prompt" class="hidden">
+                <div class="question-count-badge">
+                    <i class="fas fa-layer-group"></i>
+                    <span id="question-count-text">0 Questions</span>
+                </div>
+                <div class="previous-questions-strip" id="mini-cards-container"></div>
+                <h3>What would you like to do next?</h3>
+                <p>Add more questions or finish creating your quiz</p>
+                <div class="prompt-buttons">
+                    <button class="prompt-btn add-more" id="prompt-add-btn">
+                        <i class="fas fa-plus-circle"></i> Add Another Question
+                    </button>
+                    <button class="prompt-btn finish" id="prompt-finish-btn">
+                        <i class="fas fa-check-circle"></i> Finish Quiz
+                    </button>
+                </div>
+            </div>
+
             <div class="creator-footer-controls">
                 <button id="add-question-btn" class="btn-primary">
                     <i class="fas fa-plus"></i> Add Question

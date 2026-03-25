@@ -1,3 +1,329 @@
+// --- Epic Visual Effects ---
+
+// Particle System
+function createParticles() {
+    const container = document.getElementById('particles-container');
+    if (!container) return;
+
+    const colors = ['rgba(102, 126, 234, 0.4)', 'rgba(118, 75, 162, 0.4)', 'rgba(240, 147, 251, 0.4)', 'rgba(245, 87, 108, 0.4)'];
+
+    for (let i = 0; i < 20; i++) {
+        const particle = document.createElement('div');
+        particle.className = 'particle';
+        particle.style.left = Math.random() * 100 + '%';
+        particle.style.width = (Math.random() * 20 + 10) + 'px';
+        particle.style.height = particle.style.width;
+        particle.style.background = colors[Math.floor(Math.random() * colors.length)];
+        particle.style.animationDelay = Math.random() * 20 + 's';
+        particle.style.animationDuration = (Math.random() * 10 + 15) + 's';
+        container.appendChild(particle);
+    }
+}
+
+// Confetti Effect
+function launchConfetti() {
+    const container = document.getElementById('confetti-container');
+    if (!container) return;
+
+    const colors = ['#667eea', '#764ba2', '#f093fb', '#f5576c', '#ffd700', '#00ff88', '#00d4ff'];
+    const shapes = ['square', 'circle'];
+
+    for (let i = 0; i < 150; i++) {
+        setTimeout(() => {
+            const confetti = document.createElement('div');
+            confetti.className = 'confetti';
+            confetti.style.left = Math.random() * 100 + '%';
+            confetti.style.background = colors[Math.floor(Math.random() * colors.length)];
+            confetti.style.width = (Math.random() * 10 + 5) + 'px';
+            confetti.style.height = confetti.style.width;
+            confetti.style.borderRadius = shapes[Math.floor(Math.random() * shapes.length)] === 'circle' ? '50%' : '0';
+            confetti.style.animationDuration = (Math.random() * 2 + 2) + 's';
+            container.appendChild(confetti);
+
+            setTimeout(() => confetti.remove(), 4000);
+        }, i * 20);
+    }
+}
+
+// Streak Counter
+let streak = 0;
+const streakContainer = document.getElementById('streak-container');
+const streakCount = document.getElementById('streak-count');
+
+function updateStreak(correct) {
+    if (correct) {
+        streak++;
+        if (streakCount) streakCount.textContent = streak;
+        if (streakContainer && streak >= 2) {
+            streakContainer.classList.add('visible');
+            streakContainer.classList.add('fire');
+            setTimeout(() => streakContainer.classList.remove('fire'), 500);
+        }
+
+        // Show score popup for streaks
+        if (streak >= 3) {
+            showScorePopup(`${streak}x STREAK!`);
+        }
+    } else {
+        streak = 0;
+        if (streakContainer) streakContainer.classList.remove('visible');
+    }
+}
+
+function showScorePopup(text) {
+    const popup = document.createElement('div');
+    popup.className = 'score-popup';
+    popup.textContent = text;
+    document.body.appendChild(popup);
+    setTimeout(() => popup.remove(), 1000);
+}
+
+// Initialize particles on load
+document.addEventListener('DOMContentLoaded', () => {
+    createParticles();
+    initRippleEffect();
+    initSettings();
+    initKeyboardShortcuts();
+});
+
+// --- Ripple Effect for Buttons ---
+function initRippleEffect() {
+    document.addEventListener('click', (e) => {
+        const button = e.target.closest('button, .option-tile');
+        if (!button) return;
+
+        const ripple = document.createElement('span');
+        ripple.className = 'ripple';
+        const rect = button.getBoundingClientRect();
+        const size = Math.max(rect.width, rect.height);
+        ripple.style.width = ripple.style.height = size + 'px';
+        ripple.style.left = (e.clientX - rect.left - size / 2) + 'px';
+        ripple.style.top = (e.clientY - rect.top - size / 2) + 'px';
+        button.appendChild(ripple);
+        setTimeout(() => ripple.remove(), 600);
+    });
+}
+
+// --- Settings Panel ---
+let settings = {
+    soundEnabled: true,
+    timerEnabled: false,
+    shuffleEnabled: false,
+    keyboardEnabled: true,
+    timerDuration: 30
+};
+
+function initSettings() {
+    // Load saved settings
+    const savedSettings = localStorage.getItem('quizSettings');
+    if (savedSettings) {
+        settings = { ...settings, ...JSON.parse(savedSettings) };
+    }
+
+    // Apply settings to UI
+    const soundToggle = document.getElementById('sound-toggle');
+    const timerToggle = document.getElementById('timer-toggle');
+    const shuffleToggle = document.getElementById('shuffle-toggle');
+    const keyboardToggle = document.getElementById('keyboard-toggle');
+    const timerDuration = document.getElementById('timer-duration');
+    const settingsBtn = document.getElementById('settings-btn');
+    const settingsPanel = document.getElementById('settings-panel');
+
+    if (soundToggle) soundToggle.checked = settings.soundEnabled;
+    if (timerToggle) timerToggle.checked = settings.timerEnabled;
+    if (shuffleToggle) shuffleToggle.checked = settings.shuffleEnabled;
+    if (keyboardToggle) keyboardToggle.checked = settings.keyboardEnabled;
+    if (timerDuration) timerDuration.value = settings.timerDuration;
+
+    // Settings panel toggle
+    if (settingsBtn && settingsPanel) {
+        settingsBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            settingsPanel.classList.toggle('visible');
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!settingsPanel.contains(e.target) && e.target !== settingsBtn) {
+                settingsPanel.classList.remove('visible');
+            }
+        });
+    }
+
+    // Setting change handlers
+    if (soundToggle) {
+        soundToggle.addEventListener('change', () => {
+            settings.soundEnabled = soundToggle.checked;
+            saveSettings();
+        });
+    }
+
+    if (timerToggle) {
+        timerToggle.addEventListener('change', () => {
+            settings.timerEnabled = timerToggle.checked;
+            saveSettings();
+        });
+    }
+
+    if (shuffleToggle) {
+        shuffleToggle.addEventListener('change', () => {
+            settings.shuffleEnabled = shuffleToggle.checked;
+            saveSettings();
+        });
+    }
+
+    if (keyboardToggle) {
+        keyboardToggle.addEventListener('change', () => {
+            settings.keyboardEnabled = keyboardToggle.checked;
+            saveSettings();
+        });
+    }
+
+    if (timerDuration) {
+        timerDuration.addEventListener('change', () => {
+            settings.timerDuration = parseInt(timerDuration.value);
+            saveSettings();
+        });
+    }
+}
+
+function saveSettings() {
+    localStorage.setItem('quizSettings', JSON.stringify(settings));
+}
+
+// --- Timer System ---
+let timerInterval = null;
+let timeRemaining = 0;
+
+function startTimer() {
+    if (!settings.timerEnabled) return;
+
+    const timerContainer = document.getElementById('timer-container');
+    const timerDisplay = document.getElementById('timer-display');
+    if (!timerContainer || !timerDisplay) return;
+
+    timeRemaining = settings.timerDuration;
+    updateTimerDisplay();
+    timerContainer.classList.add('visible');
+    timerContainer.classList.remove('warning');
+
+    clearInterval(timerInterval);
+    timerInterval = setInterval(() => {
+        timeRemaining--;
+        updateTimerDisplay();
+
+        if (timeRemaining <= 5) {
+            timerContainer.classList.add('warning');
+        }
+
+        if (timeRemaining <= 0) {
+            clearInterval(timerInterval);
+            // Auto-submit with wrong answer if time runs out
+            if (selectedOptionIndex === null) {
+                selectedOptionIndex = -1; // Invalid selection
+            }
+            checkAnswer();
+        }
+    }, 1000);
+}
+
+function stopTimer() {
+    clearInterval(timerInterval);
+    const timerContainer = document.getElementById('timer-container');
+    if (timerContainer) {
+        timerContainer.classList.remove('visible', 'warning');
+    }
+}
+
+function updateTimerDisplay() {
+    const timerDisplay = document.getElementById('timer-display');
+    if (!timerDisplay) return;
+
+    const minutes = Math.floor(timeRemaining / 60);
+    const seconds = timeRemaining % 60;
+    timerDisplay.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+}
+
+// --- Keyboard Shortcuts ---
+function initKeyboardShortcuts() {
+    document.addEventListener('keydown', (e) => {
+        if (!settings.keyboardEnabled) return;
+
+        // Only work in taker view
+        if (takerView.classList.contains('hidden')) return;
+
+        const key = e.key;
+
+        // Number keys 1-6 for selecting options
+        if (key >= '1' && key <= '6') {
+            const optionIndex = parseInt(key) - 1;
+            const tiles = optionsContainer.querySelectorAll('.option-tile');
+            if (tiles[optionIndex] && !tiles[optionIndex].style.pointerEvents) {
+                selectOption(optionIndex, tiles[optionIndex]);
+            }
+        }
+
+        // Enter or Space to check answer
+        if ((key === 'Enter' || key === ' ') && selectedOptionIndex !== null) {
+            e.preventDefault();
+            if (!checkAnswerBtn.style.display || checkAnswerBtn.style.display !== 'none') {
+                checkAnswer();
+            } else if (!nextQuestionBtn.classList.contains('hidden')) {
+                nextQuestion();
+            }
+        }
+
+        // Escape to close quiz
+        if (key === 'Escape') {
+            if (takerCloseBtn) takerCloseBtn.click();
+        }
+    });
+}
+
+// --- Shuffle Function ---
+function shuffleArray(array) {
+    const shuffled = [...array];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    return shuffled;
+}
+
+// --- Auto-save Indicator ---
+function showAutosaveIndicator() {
+    const indicator = document.getElementById('autosave-indicator');
+    if (!indicator) return;
+
+    indicator.querySelector('span').textContent = 'Saving...';
+    indicator.querySelector('i').className = 'fas fa-sync-alt';
+    indicator.classList.remove('saved');
+    indicator.classList.add('visible');
+
+    setTimeout(() => {
+        indicator.querySelector('span').textContent = 'Saved!';
+        indicator.querySelector('i').className = 'fas fa-check';
+        indicator.classList.add('saved');
+
+        setTimeout(() => {
+            indicator.classList.remove('visible');
+        }, 1500);
+    }, 500);
+}
+
+// --- View Transition Helper ---
+function transitionToView(hideView, showView) {
+    hideView.classList.add('view-exit');
+    setTimeout(() => {
+        hideView.classList.add('hidden');
+        hideView.classList.remove('view-exit');
+        showView.classList.remove('hidden');
+        showView.classList.add('view-enter');
+        setTimeout(() => {
+            showView.classList.remove('view-enter');
+        }, 500);
+    }, 300);
+}
+
 // --- Media Upload Functions ---
 function handleMediaUpload(qIndex, fileInput) {
     const file = fileInput.files[0];
@@ -115,6 +441,7 @@ discardDraftBtn.addEventListener('click', () => {
 function saveDraft() {
     currentQuiz.title = quizTitleInput.value;
     localStorage.setItem('quizDraft', JSON.stringify(currentQuiz));
+    showAutosaveIndicator();
 }
 
 function showCreatorView() {
@@ -125,7 +452,18 @@ function showCreatorView() {
 }
 
 // --- Creator Functions ---
+let isShowingPrompt = false;
+const addQuestionPrompt = document.getElementById('add-question-prompt');
+const promptAddBtn = document.getElementById('prompt-add-btn');
+const promptFinishBtn = document.getElementById('prompt-finish-btn');
+const creatorFooterControls = document.querySelector('.creator-footer-controls');
+
 function addQuestion() {
+    // If coming from prompt, hide it first
+    if (isShowingPrompt) {
+        hideAddQuestionPrompt();
+    }
+
     currentQuiz.questions.push({
         text: '',
         options: ['', ''],
@@ -134,9 +472,161 @@ function addQuestion() {
     });
     renderCreatorQuestions();
     saveDraft();
+
+    // Focus on the new question's text input
+    setTimeout(() => {
+        const newQuestionInput = questionsContainer.querySelector('.question-block:last-child .question-text-input');
+        if (newQuestionInput) {
+            newQuestionInput.focus();
+            newQuestionInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+    }, 100);
+}
+
+// Show the add question prompt with card scroll animation
+function showAddQuestionPrompt() {
+    if (currentQuiz.questions.length === 0) return;
+
+    isShowingPrompt = true;
+
+    // Scroll out all question cards
+    const questionBlocks = questionsContainer.querySelectorAll('.question-block');
+    questionBlocks.forEach((block, index) => {
+        setTimeout(() => {
+            block.classList.add('scroll-out');
+            setTimeout(() => {
+                block.classList.remove('scroll-out');
+                block.classList.add('faded');
+            }, 600);
+        }, index * 100);
+    });
+
+    // Update and show the prompt
+    setTimeout(() => {
+        updatePromptContent();
+        addQuestionPrompt.classList.remove('hidden');
+        if (creatorFooterControls) creatorFooterControls.classList.add('hidden');
+    }, questionBlocks.length * 100 + 300);
+}
+
+function hideAddQuestionPrompt() {
+    isShowingPrompt = false;
+    addQuestionPrompt.classList.add('hidden');
+    if (creatorFooterControls) creatorFooterControls.classList.remove('hidden');
+
+    // Restore all faded cards
+    const fadedBlocks = questionsContainer.querySelectorAll('.question-block.faded');
+    fadedBlocks.forEach((block, index) => {
+        setTimeout(() => {
+            block.classList.remove('faded');
+            block.classList.add('scroll-in');
+            setTimeout(() => {
+                block.classList.remove('scroll-in');
+            }, 600);
+        }, index * 50);
+    });
+}
+
+function updatePromptContent() {
+    const countText = document.getElementById('question-count-text');
+    const miniCardsContainer = document.getElementById('mini-cards-container');
+
+    if (countText) {
+        const count = currentQuiz.questions.length;
+        countText.textContent = `${count} Question${count !== 1 ? 's' : ''}`;
+    }
+
+    if (miniCardsContainer) {
+        miniCardsContainer.innerHTML = '';
+        // Show mini cards for each question (max 10)
+        const questionsToShow = Math.min(currentQuiz.questions.length, 10);
+        for (let i = 0; i < questionsToShow; i++) {
+            const miniCard = document.createElement('div');
+            miniCard.className = 'mini-question-card';
+            miniCard.textContent = `Q${i + 1}`;
+            miniCardsContainer.appendChild(miniCard);
+        }
+        if (currentQuiz.questions.length > 10) {
+            const moreCard = document.createElement('div');
+            moreCard.className = 'mini-question-card';
+            moreCard.textContent = `+${currentQuiz.questions.length - 10}`;
+            miniCardsContainer.appendChild(moreCard);
+        }
+    }
+}
+
+// Setup prompt button listeners
+if (promptAddBtn) {
+    promptAddBtn.addEventListener('click', () => {
+        addQuestion();
+    });
+}
+
+if (promptFinishBtn) {
+    promptFinishBtn.addEventListener('click', () => {
+        hideAddQuestionPrompt();
+        // Trigger save quiz flow
+        saveQuiz();
+    });
+}
+
+// Check if question is complete and show prompt
+function checkQuestionComplete(qIndex) {
+    const question = currentQuiz.questions[qIndex];
+    if (!question) return false;
+
+    const hasText = question.text.trim().length > 0;
+    const hasOptions = question.options.filter(opt => opt.trim().length > 0).length >= 2;
+
+    return hasText && hasOptions;
+}
+
+// Watch for question completion
+function onQuestionFieldChange(qIndex) {
+    saveDraft();
+
+    // If this is the last question and it's complete, show the prompt after a delay
+    if (qIndex === currentQuiz.questions.length - 1 && checkQuestionComplete(qIndex) && !isShowingPrompt) {
+        // Add a subtle indicator that they can proceed
+        const lastBlock = questionsContainer.querySelector('.question-block:last-child');
+        if (lastBlock && !lastBlock.querySelector('.ready-indicator')) {
+            const indicator = document.createElement('div');
+            indicator.className = 'ready-indicator';
+            indicator.innerHTML = '<i class="fas fa-check-circle"></i> Question ready!';
+            indicator.style.cssText = `
+                position: absolute;
+                bottom: 10px;
+                right: 10px;
+                background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+                color: white;
+                padding: 8px 15px;
+                border-radius: 20px;
+                font-size: 0.85em;
+                font-weight: 600;
+                animation: fadeInUp 0.3s ease-out;
+                cursor: pointer;
+            `;
+            indicator.addEventListener('click', showAddQuestionPrompt);
+            lastBlock.appendChild(indicator);
+
+            // Auto-show prompt after a delay if user doesn't interact
+            setTimeout(() => {
+                if (!isShowingPrompt && checkQuestionComplete(qIndex)) {
+                    showAddQuestionPrompt();
+                }
+            }, 2000);
+        }
+    }
 }
 
 function renderCreatorQuestions() {
+    // Hide prompt if showing
+    if (isShowingPrompt) {
+        isShowingPrompt = false;
+        if (addQuestionPrompt) addQuestionPrompt.classList.add('hidden');
+        if (creatorFooterControls) creatorFooterControls.classList.remove('hidden');
+    }
+
     questionsContainer.innerHTML = '';
     currentQuiz.questions.forEach((q, index) => {
         const questionBlock = document.createElement('div');
@@ -235,7 +725,7 @@ function deleteOption(qIndex, oIndex) {
 function updateQuestionText(index, text) {
     if (index >= 0 && index < currentQuiz.questions.length) {
         currentQuiz.questions[index].text = text;
-        saveDraft();
+        onQuestionFieldChange(index);
     }
 }
 
@@ -244,7 +734,7 @@ function updateOptionText(qIndex, oIndex, text) {
         const question = currentQuiz.questions[qIndex];
         if (oIndex >= 0 && oIndex < question.options.length) {
             question.options[oIndex] = text;
-            saveDraft();
+            onQuestionFieldChange(qIndex);
         }
     }
 }
@@ -337,6 +827,12 @@ function renderTakerQuiz() {
     checkAnswerBtn.style.display = '';
     selectedOptionIndex = null;
 
+    // Reset streak display on new question
+    if (currentQuestionIndex === 0) {
+        streak = 0;
+        if (streakContainer) streakContainer.classList.remove('visible');
+    }
+
     if (postQuizActions) postQuizActions.classList.add('hidden');
     if (scoreResult) scoreResult.textContent = '';
 
@@ -386,10 +882,26 @@ function renderTakerQuiz() {
     question.options.forEach((option, idx) => {
         const tile = document.createElement('div');
         tile.className = 'option-tile';
-        tile.innerHTML = converter.makeHtml(option);
+        tile.tabIndex = 0; // Make focusable for accessibility
+
+        // Add keyboard hint if enabled
+        if (settings.keyboardEnabled && idx < 6) {
+            const hint = document.createElement('span');
+            hint.className = 'keyboard-hint';
+            hint.textContent = (idx + 1).toString();
+            tile.appendChild(hint);
+        }
+
+        const content = document.createElement('span');
+        content.innerHTML = converter.makeHtml(option);
+        tile.appendChild(content);
+
         tile.addEventListener('click', () => selectOption(idx, tile));
         optionsContainer.appendChild(tile);
     });
+
+    // Start timer if enabled
+    startTimer();
 }
 
 function selectOption(idx, tile) {
@@ -402,33 +914,57 @@ function selectOption(idx, tile) {
 }
 
 function playSound(sound) {
+    if (!settings.soundEnabled) return;
     const audio = new Audio(`./assets/${sound}.mp3`);
-    audio.play();
+    audio.play().catch(() => {}); // Ignore errors if sound fails to play
 }
 
 function checkAnswer() {
     if (selectedOptionIndex === null) return;
+
+    // Stop the timer
+    stopTimer();
+
     const question = currentQuiz.questions[currentQuestionIndex];
     const correctIdx = question.correctAnswerIndex;
-    const correct = selectedOptionIndex === correctIdx;
+    const correct = selectedOptionIndex === correctIdx && selectedOptionIndex !== -1;
     if (correct) score++;
+
+    // Update streak
+    updateStreak(correct);
 
     Array.from(optionsContainer.children).forEach((tile, i) => {
         tile.classList.remove('selected');
-        if (i === correctIdx) tile.classList.add('correct');
-        if (i === selectedOptionIndex && !correct) tile.classList.add('incorrect');
+        if (i === correctIdx) {
+            tile.classList.add('correct');
+            tile.classList.add('bounce');
+        }
+        if (i === selectedOptionIndex && !correct) {
+            tile.classList.add('incorrect');
+            tile.classList.add('shake');
+        }
         tile.style.pointerEvents = 'none';
     });
 
     feedbackContainer.classList.remove('hidden');
     if (correct) {
         feedbackContainer.classList.add('correct-feedback');
-        feedbackMessage.innerHTML = '<i class="fas fa-check-circle"></i> Correct!';
+        const messages = ['Correct!', 'Awesome!', 'Nailed it!', 'Perfect!', 'Brilliant!'];
+        const randomMsg = messages[Math.floor(Math.random() * messages.length)];
+        feedbackMessage.innerHTML = `<i class="fas fa-check-circle"></i> ${randomMsg}`;
         playSound('correct');
     } else {
         feedbackContainer.classList.add('incorrect-feedback');
-        feedbackMessage.innerHTML = '<i class="fas fa-times-circle"></i> Incorrect!';
+        const messages = ['Incorrect!', 'Oops!', 'Not quite!', 'Try again next time!'];
+        const randomMsg = messages[Math.floor(Math.random() * messages.length)];
+        feedbackMessage.innerHTML = `<i class="fas fa-times-circle"></i> ${randomMsg}`;
         playSound('wrong');
+        // Shake the view container
+        const viewContainer = document.querySelector('.view-container');
+        if (viewContainer) {
+            viewContainer.classList.add('shake');
+            setTimeout(() => viewContainer.classList.remove('shake'), 600);
+        }
     }
     checkAnswerBtn.style.display = 'none';
     nextQuestionBtn.classList.remove('hidden');
@@ -444,15 +980,45 @@ function nextQuestion() {
 }
 
 function showQuizResult() {
+    // Stop timer
+    stopTimer();
+
     progressBar.style.width = '100%';
     optionsContainer.innerHTML = '';
     questionText.textContent = '';
     checkAnswerBtn.style.display = 'none';
     feedbackContainer.classList.remove('hidden', 'correct-feedback', 'incorrect-feedback');
-    feedbackMessage.textContent = `Quiz Complete! Your score: ${score} / ${currentQuiz.questions.length}`;
+
+    const percentage = Math.round((score / currentQuiz.questions.length) * 100);
+    let emoji, message;
+
+    if (percentage === 100) {
+        emoji = '🏆';
+        message = 'PERFECT SCORE!';
+        launchConfetti();
+    } else if (percentage >= 80) {
+        emoji = '🌟';
+        message = 'Excellent!';
+        launchConfetti();
+    } else if (percentage >= 60) {
+        emoji = '👏';
+        message = 'Good Job!';
+    } else if (percentage >= 40) {
+        emoji = '💪';
+        message = 'Keep Practicing!';
+    } else {
+        emoji = '📚';
+        message = 'Study More!';
+    }
+
+    feedbackMessage.innerHTML = `${emoji} ${message}<br><span style="font-size: 0.6em; margin-top: 10px; display: block;">Score: ${score} / ${currentQuiz.questions.length} (${percentage}%)</span>`;
     nextQuestionBtn.classList.add('hidden');
-    if (scoreResult) scoreResult.textContent = `Score: ${score} / ${currentQuiz.questions.length}`;
+    if (scoreResult) scoreResult.textContent = `${emoji} ${score} / ${currentQuiz.questions.length}`;
     if (postQuizActions) postQuizActions.classList.remove('hidden');
+
+    // Hide streak container
+    if (streakContainer) streakContainer.classList.remove('visible');
+    streak = 0;
 }
 
 // --- Taker View Event Listeners ---
@@ -511,10 +1077,14 @@ async function loadQuiz() {
             if (currentQuiz.questions.length === 0) {
                 throw new Error("No valid questions found in quiz file");
             }
-            
-            // Proceed to show quiz
-            homeView.classList.add('hidden');
-            takerView.classList.remove('hidden');
+
+            // Shuffle questions if enabled
+            if (settings.shuffleEnabled) {
+                currentQuiz.questions = shuffleArray(currentQuiz.questions);
+            }
+
+            // Proceed to show quiz with transition
+            transitionToView(homeView, takerView);
             currentQuestionIndex = 0;
             score = 0;
             renderTakerQuiz();
