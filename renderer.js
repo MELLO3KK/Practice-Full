@@ -585,7 +585,7 @@ function checkQuestionComplete(qIndex) {
 function onQuestionFieldChange(qIndex) {
     saveDraft();
 
-    // If this is the last question and it's complete, show the prompt after a delay
+    // If this is the last question and it's complete, show the prompt indicator
     if (qIndex === currentQuiz.questions.length - 1 && checkQuestionComplete(qIndex) && !isShowingPrompt) {
         // Add a subtle indicator that they can proceed
         const lastBlock = questionsContainer.querySelector('.question-block:last-child');
@@ -609,12 +609,10 @@ function onQuestionFieldChange(qIndex) {
             indicator.addEventListener('click', showAddQuestionPrompt);
             lastBlock.appendChild(indicator);
 
-            // Auto-show prompt after a delay if user doesn't interact
-            setTimeout(() => {
-                if (!isShowingPrompt && checkQuestionComplete(qIndex)) {
-                    showAddQuestionPrompt();
-                }
-            }, 2000);
+            // AUTO-TRANSITION DISABLED:
+            // We removed the setTimeout that was automatically calling showAddQuestionPrompt()
+            // This prevents the UI from disappearing while users are still working on their options.
+            // Users can now manually click the indicator when they are truly ready.
         }
     }
 }
