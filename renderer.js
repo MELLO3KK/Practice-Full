@@ -110,6 +110,7 @@ let settings = {
     timerEnabled: false,
     shuffleEnabled: false,
     keyboardEnabled: true,
+    reattemptEnabled: false,
     timerDuration: 30
 };
 
@@ -125,6 +126,7 @@ function initSettings() {
     const timerToggle = document.getElementById('timer-toggle');
     const shuffleToggle = document.getElementById('shuffle-toggle');
     const keyboardToggle = document.getElementById('keyboard-toggle');
+    const reattemptToggle = document.getElementById('reattempt-toggle');
     const timerDuration = document.getElementById('timer-duration');
     const settingsBtn = document.getElementById('settings-btn');
     const settingsPanel = document.getElementById('settings-panel');
@@ -133,6 +135,7 @@ function initSettings() {
     if (timerToggle) timerToggle.checked = settings.timerEnabled;
     if (shuffleToggle) shuffleToggle.checked = settings.shuffleEnabled;
     if (keyboardToggle) keyboardToggle.checked = settings.keyboardEnabled;
+    if (reattemptToggle) reattemptToggle.checked = settings.reattemptEnabled;
     if (timerDuration) timerDuration.value = settings.timerDuration;
 
     // Settings panel toggle
@@ -174,6 +177,13 @@ function initSettings() {
     if (keyboardToggle) {
         keyboardToggle.addEventListener('change', () => {
             settings.keyboardEnabled = keyboardToggle.checked;
+            saveSettings();
+        });
+    }
+
+    if (reattemptToggle) {
+        reattemptToggle.addEventListener('change', () => {
+            settings.reattemptEnabled = reattemptToggle.checked;
             saveSettings();
         });
     }
@@ -410,6 +420,10 @@ if (restartQuizBtn) {
     restartQuizBtn.addEventListener('click', () => {
         currentQuestionIndex = 0;
         score = 0;
+        wrongQuestions = [];
+        originalQuestions = null;
+        isReattempting = false;
+        firstAttemptScore = 0;
         renderTakerQuiz();
     });
 }
@@ -801,6 +815,10 @@ async function saveQuiz() {
 let currentQuestionIndex = 0;
 let score = 0;
 let selectedOptionIndex = null;
+let wrongQuestions = [];
+let originalQuestions = null;
+let isReattempting = false;
+let firstAttemptScore = 0;
 
 // --- Taker View DOM Elements ---
 const progressBar = document.getElementById('progress-bar');
@@ -825,9 +843,12 @@ function renderTakerQuiz() {
     checkAnswerBtn.style.display = '';
     selectedOptionIndex = null;
 
-    // Reset streak display on new question
-    if (currentQuestionIndex === 0) {
+    // Reset state on new quiz run
+    if (currentQuestionIndex === 0 && !isReattempting) {
         streak = 0;
+        wrongQuestions = [];
+        originalQuestions = null;
+        firstAttemptScore = 0;
         if (streakContainer) streakContainer.classList.remove('visible');
     }
 
@@ -930,6 +951,9 @@ function checkAnswer() {
 
     // Update streak
     updateStreak(correct);
+    if (!correct) {
+        wrongQuestions.push(question);
+    }
 
     Array.from(optionsContainer.children).forEach((tile, i) => {
         tile.classList.remove('selected');
@@ -980,6 +1004,38 @@ function nextQuestion() {
 function showQuizResult() {
     // Stop timer
     stopTimer();
+
+    // Capture first attempt score
+    if (!isReattempting) {
+        firstAttemptScore = score;
+    }
+
+    // Check for mandatory reattempt of wrong questions
+    if (settings.reattemptEnabled && wrongQuestions.length > 0) {
+        if (!isReattempting) {
+            originalQuestions = [...currentQuiz.questions];
+            isReattempting = true;
+        }
+
+        showNotification(`${wrongQuestions.length} mistake(s) made! Reattempting wrong questions...`, 'error');
+        
+        setTimeout(() => {
+            currentQuiz.questions = [...wrongQuestions];
+            wrongQuestions = [];
+            currentQuestionIndex = 0;
+            score = 0;
+            renderTakerQuiz();
+        }, 2000);
+        return;
+    }
+
+    // Final completion
+    if (isReattempting && originalQuestions) {
+        currentQuiz.questions = [...originalQuestions];
+        score = firstAttemptScore; // Use the score from the very first attempt
+        isReattempting = false;
+        originalQuestions = null;
+    }
 
     progressBar.style.width = '100%';
     optionsContainer.innerHTML = '';
