@@ -529,6 +529,58 @@ body.dark-mode .dialog-content {
     border: 1px solid #e2e8f0;
     transition: transform 0.25s, box-shadow 0.25s;
     position: relative;
+    overflow: hidden;
+}
+
+.group-divider-block {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 12px;
+    padding: 15px 30px;
+    margin: 10px 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    color: white;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+}
+
+.group-divider-block h4 {
+    margin: 0;
+    font-size: 1.2rem;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.group-divider-block .drag-handle {
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.group-divider-block .drag-handle:hover {
+    color: white;
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.group-divider-input {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 8px;
+    padding: 8px 15px;
+    color: white;
+    font-size: 1rem;
+    font-weight: 600;
+    width: 250px;
+    transition: all 0.3s;
+}
+
+.group-divider-input:focus {
+    background: rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.5);
+    outline: none;
+}
+
+.group-divider-input::placeholder {
+    color: rgba(255, 255, 255, 0.5);
 }
 
 .question-block:hover {

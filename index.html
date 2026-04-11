@@ -55,6 +55,13 @@
                 <span class="toggle-slider"></span>
             </label>
         </div>
+        <div class="setting-row">
+            <label>Grouped Quiz Mode</label>
+            <label class="toggle-switch">
+                <input type="checkbox" id="grouped-toggle">
+                <span class="toggle-slider"></span>
+            </label>
+        </div>
         <div class="setting-row" style="flex-direction: column; align-items: flex-start; gap: 8px;">
             <label>Time per Question</label>
             <select id="timer-duration" style="width: 100%; padding: 8px; border-radius: 8px; border: 1px solid #ddd;">
@@ -120,6 +127,9 @@
             <div class="creator-footer-controls">
                 <button id="add-question-btn" class="btn-primary">
                     <i class="fas fa-plus"></i> Add Question
+                </button>
+                <button id="add-divider-btn" class="btn-secondary">
+                    <i class="fas fa-layer-group"></i> Add Group Divider
                 </button>
             </div>
         </div>

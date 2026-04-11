@@ -111,6 +111,7 @@ let settings = {
     shuffleEnabled: false,
     keyboardEnabled: true,
     reattemptEnabled: false,
+    groupedQuizEnabled: false,
     timerDuration: 30
 };
 
@@ -127,6 +128,7 @@ function initSettings() {
     const shuffleToggle = document.getElementById('shuffle-toggle');
     const keyboardToggle = document.getElementById('keyboard-toggle');
     const reattemptToggle = document.getElementById('reattempt-toggle');
+    const groupedToggle = document.getElementById('grouped-toggle');
     const timerDuration = document.getElementById('timer-duration');
     const settingsBtn = document.getElementById('settings-btn');
     const settingsPanel = document.getElementById('settings-panel');
@@ -136,6 +138,7 @@ function initSettings() {
     if (shuffleToggle) shuffleToggle.checked = settings.shuffleEnabled;
     if (keyboardToggle) keyboardToggle.checked = settings.keyboardEnabled;
     if (reattemptToggle) reattemptToggle.checked = settings.reattemptEnabled;
+    if (groupedToggle) groupedToggle.checked = settings.groupedQuizEnabled;
     if (timerDuration) timerDuration.value = settings.timerDuration;
 
     // Settings panel toggle
@@ -184,6 +187,13 @@ function initSettings() {
     if (reattemptToggle) {
         reattemptToggle.addEventListener('change', () => {
             settings.reattemptEnabled = reattemptToggle.checked;
+            saveSettings();
+        });
+    }
+    
+    if (groupedToggle) {
+        groupedToggle.addEventListener('change', () => {
+            settings.groupedQuizEnabled = groupedToggle.checked;
             saveSettings();
         });
     }
@@ -370,6 +380,7 @@ const takerView = document.getElementById('taker-view');
 const quizTitleInput = document.getElementById('quiz-title');
 const questionsContainer = document.getElementById('questions-container');
 const addQuestionBtn = document.getElementById('add-question-btn');
+const addDividerBtn = document.getElementById('add-divider-btn');
 const saveQuizBtn = document.getElementById('save-quiz-btn');
 const goToCreatorBtn = document.getElementById('go-to-creator-btn');
 const goToTakerBtn = document.getElementById('go-to-taker-btn');
@@ -387,6 +398,7 @@ const discardDraftBtn = document.getElementById('discard-draft-btn');
 
 // --- Event Listeners ---
 addQuestionBtn.addEventListener('click', addQuestion);
+if (addDividerBtn) addDividerBtn.addEventListener('click', addGroupDivider);
 saveQuizBtn.addEventListener('click', saveQuiz);
 
 if (goToCreatorBtn) {
@@ -479,6 +491,7 @@ function addQuestion() {
     }
 
     currentQuiz.questions.push({
+        type: 'question',
         text: '',
         options: ['', ''],
         correctAnswerIndex: 0,
@@ -495,6 +508,20 @@ function addQuestion() {
             newQuestionInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
     }, 100);
+}
+
+function addGroupDivider() {
+    // If coming from prompt, hide it first
+    if (isShowingPrompt) {
+        hideAddQuestionPrompt();
+    }
+
+    currentQuiz.questions.push({
+        type: 'group-divider',
+        label: 'New Group'
+    });
+    renderCreatorQuestions();
+    saveDraft();
 }
 
 // Show the add question prompt with card scroll animation
@@ -641,8 +668,23 @@ function renderCreatorQuestions() {
 
     questionsContainer.innerHTML = '';
     currentQuiz.questions.forEach((q, index) => {
+        if (q.type === 'group-divider') {
+            const dividerBlock = document.createElement('div');
+            dividerBlock.className = 'group-divider-block';
+            dividerBlock.dataset.id = index;
+            dividerBlock.innerHTML = `
+                <h4>
+                    <i class="fas fa-grip-vertical drag-handle"></i>
+                    <i class="fas fa-layer-group"></i>
+                    <input type="text" class="group-divider-input" value="${q.label || ''}" placeholder="Group Name" oninput="updateDividerLabel(${index}, this.value)">
+                </h4>
+                <button onclick="deleteQuestion(${index})" class="btn-danger-small"><i class="fas fa-trash-alt"></i></button>
+            `;
+            questionsContainer.appendChild(dividerBlock);
+            return;
+        }
+
         const questionBlock = document.createElement('div');
-        questionBlock.className = 'question-block';
         questionBlock.dataset.id = index;
         questionBlock.innerHTML = `
             <div class="question-header">
@@ -741,6 +783,13 @@ function updateQuestionText(index, text) {
     }
 }
 
+function updateDividerLabel(index, label) {
+    if (index >= 0 && index < currentQuiz.questions.length) {
+        currentQuiz.questions[index].label = label;
+        saveDraft();
+    }
+}
+
 function updateOptionText(qIndex, oIndex, text) {
     if (qIndex >= 0 && qIndex < currentQuiz.questions.length) {
         const question = currentQuiz.questions[qIndex];
@@ -763,51 +812,66 @@ function addOption(qIndex) {
 }
 
 async function saveQuiz() {
-    currentQuiz.title = quizTitleInput.value.trim();
-    
-    // Validate quiz structure
-    if (!currentQuiz.title) {
-        showNotification('Quiz title is required', 'error');
-        return;
-    }
-    
-    if (currentQuiz.questions.length === 0) {
-        showNotification('Add at least one question', 'error');
-        return;
-    }
-    
-    for (let i = 0; i < currentQuiz.questions.length; i++) {
-        const q = currentQuiz.questions[i];
-        if (!q.text.trim()) {
-            showNotification(`Question ${i+1} text is required`, 'error');
+    try {
+        currentQuiz.title = quizTitleInput.value.trim();
+        
+        // Validate quiz structure
+        if (!currentQuiz.title) {
+            showNotification('Quiz title is required', 'error');
             return;
         }
-        if (q.options.length < 2) {
-            showNotification(`Question ${i+1} needs at least 2 options`, 'error');
+        
+        if (currentQuiz.questions.length === 0) {
+            showNotification('Add at least one question', 'error');
             return;
         }
-    }
+        
+        for (let i = 0; i < currentQuiz.questions.length; i++) {
+            const q = currentQuiz.questions[i];
+            
+            // Skip validation for group dividers
+            if (q.type === 'group-divider') {
+                if (!q.label || !q.label.trim()) {
+                    showNotification(`Group divider ${i+1} needs a label`, 'error');
+                    return;
+                }
+                continue;
+            }
 
-    // Proceed with saving
-    const jsonString = JSON.stringify(currentQuiz, null, 2);
-    let result;
+            if (!q.text || !q.text.trim()) {
+                showNotification(`Question ${i+1} text is required`, 'error');
+                return;
+            }
+            if (!q.options || q.options.length < 2) {
+                showNotification(`Question ${i+1} needs at least 2 options`, 'error');
+                return;
+            }
+        }
 
-    if (currentQuizFilePath) {
-        // Update existing quiz
-        result = await window.electronAPI.updateQuiz(jsonString, currentQuizFilePath);
-    } else {
-        // Save new quiz
-        result = await window.electronAPI.saveQuiz(jsonString);
+        // Proceed with saving
+        const jsonString = JSON.stringify(currentQuiz, null, 2);
+        let result;
+
+        if (currentQuizFilePath) {
+            // Update existing quiz
+            result = await window.electronAPI.updateQuiz(jsonString, currentQuizFilePath);
+        } else {
+            // Save new quiz
+            result = await window.electronAPI.saveQuiz(jsonString);
+            if (result.success) {
+                currentQuizFilePath = result.path; // Store new path for subsequent saves
+            }
+        }
+        
         if (result.success) {
-            currentQuizFilePath = result.path; // Store new path for subsequent saves
+            showNotification(`Quiz saved successfully!`, 'success');
+            localStorage.removeItem('quizDraft');
+        } else {
+            showNotification(`Failed to save quiz: ${result.error || 'Unknown error'}`, 'error');
         }
-    }
-    
-    if (result.success) {
-        showNotification(`Quiz saved successfully!`, 'success');
-        localStorage.removeItem('quizDraft');
-    } else {
-        showNotification('Failed to save quiz.', 'error');
+    } catch (error) {
+        console.error('Save error:', error);
+        showNotification(`Unexpected error: ${error.message}`, 'error');
     }
 }
 
@@ -819,6 +883,7 @@ let wrongQuestions = [];
 let originalQuestions = null;
 let isReattempting = false;
 let firstAttemptScore = 0;
+let needsReattempt = false;
 
 // --- Taker View DOM Elements ---
 const progressBar = document.getElementById('progress-bar');
@@ -849,6 +914,7 @@ function renderTakerQuiz() {
         wrongQuestions = [];
         originalQuestions = null;
         firstAttemptScore = 0;
+        needsReattempt = false;
         if (streakContainer) streakContainer.classList.remove('visible');
     }
 
@@ -861,6 +927,14 @@ function renderTakerQuiz() {
     }
 
     const question = currentQuiz.questions[currentQuestionIndex];
+    if (question && question.type === 'group-divider') {
+        // Show group splash/notification and move to next question
+        showNotification(`Starting: ${question.label || 'Next Group'}`, 'info');
+        currentQuestionIndex++;
+        renderTakerQuiz();
+        return;
+    }
+
     quizTitle.textContent = currentQuiz.title || 'Quiz';
     questionText.innerHTML = converter.makeHtml(question.text);
 
@@ -893,8 +967,11 @@ function renderTakerQuiz() {
         questionArea.insertBefore(mediaContainer, questionText);
     }
 
-    const progress = currentQuiz.questions.length > 0 ?
-        ((currentQuestionIndex) / currentQuiz.questions.length) * 100 : 0;
+    const questionCount = currentQuiz.questions.filter(q => q.type !== 'group-divider').length;
+    const currentQuestionPos = currentQuiz.questions.slice(0, currentQuestionIndex).filter(q => q.type !== 'group-divider').length;
+    
+    const progress = questionCount > 0 ?
+        (currentQuestionPos / questionCount) * 100 : 0;
     progressBar.style.width = progress + '%';
 
     optionsContainer.innerHTML = '';
@@ -989,10 +1066,24 @@ function checkAnswer() {
         }
     }
     checkAnswerBtn.style.display = 'none';
+    
+    if (settings.groupedQuizEnabled && !correct) {
+        nextQuestionBtn.innerHTML = '<i class="fas fa-redo"></i> Try Again';
+        needsReattempt = true;
+    } else {
+        nextQuestionBtn.innerHTML = 'Continue';
+        needsReattempt = false;
+    }
+    
     nextQuestionBtn.classList.remove('hidden');
 }
 
 function nextQuestion() {
+    if (needsReattempt) {
+        renderTakerQuiz();
+        return;
+    }
+
     currentQuestionIndex++;
     if (currentQuestionIndex < currentQuiz.questions.length) {
         renderTakerQuiz();
@@ -1102,6 +1193,14 @@ async function loadQuiz() {
 
             // Process each question with validation
             for (const q of loadedQuiz.questions) {
+                if (q.type === 'group-divider') {
+                    currentQuiz.questions.push({
+                        type: 'group-divider',
+                        label: q.label || 'Next Group'
+                    });
+                    continue;
+                }
+
                 // Ensure basic structure exists
                 if (!q.text || !Array.isArray(q.options) || q.options.length < 2) {
                     console.warn("Skipping invalid question:", q);
@@ -1120,6 +1219,7 @@ async function loadQuiz() {
                 correctIdx = Math.max(0, Math.min(correctIdx, sanitizedOptions.length - 1));
 
                 currentQuiz.questions.push({
+                    type: 'question',
                     text: q.text || '',
                     options: sanitizedOptions,
                     correctAnswerIndex: correctIdx,

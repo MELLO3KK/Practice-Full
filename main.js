@@ -1,6 +1,7 @@
 const { app, BrowserWindow, ipcMain, dialog } = require('electron');
 const path = require('path');
 const fs = require('fs');
+const mimeTypes = require('mime-types');
 
 // Function to create the main application window
 const createWindow = () => {
@@ -147,8 +148,7 @@ ipcMain.handle('load-quiz', async () => {
                 if (question.media && question.media.url && !question.media.url.startsWith('data:')) {
                     const mediaPath = path.resolve(quizDir, question.media.url);
                     if (fs.existsSync(mediaPath)) {
-                        const mediaContent = fs.readFileSync(mediaPath);
-                        const mimeType = require('mime-types').lookup(mediaPath) || 'application/octet-stream';
+                        const mimeType = mimeTypes.lookup(mediaPath) || 'application/octet-stream';
                         question.media.url = `data:${mimeType};base64,${mediaContent.toString('base64')}`;
                     } else {
                         console.warn(`Media file not found: ${mediaPath}`);
