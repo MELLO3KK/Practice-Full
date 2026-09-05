@@ -149,6 +149,7 @@ ipcMain.handle('load-quiz', async () => {
                     const mediaPath = path.resolve(quizDir, question.media.url);
                     if (fs.existsSync(mediaPath)) {
                         const mimeType = mimeTypes.lookup(mediaPath) || 'application/octet-stream';
+                        const mediaContent = fs.readFileSync(mediaPath);
                         question.media.url = `data:${mimeType};base64,${mediaContent.toString('base64')}`;
                     } else {
                         console.warn(`Media file not found: ${mediaPath}`);
