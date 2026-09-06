@@ -1,2 +1,1 @@
-node_modules/
-yarn.lock
+Nothing should be ignored based on the provided file changes. The modified files (`main.js` and `renderer.js`) are source code files that should not be added to .gitignore.

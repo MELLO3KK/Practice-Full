@@ -47,14 +47,16 @@ function launchConfetti() {
 
 // Streak Counter
 let streak = 0;
-const streakContainer = document.getElementById('streak-container');
-const streakCount = document.getElementById('streak-count');
+let streakContainer = null;
+let streakCount = null;
 
 function updateStreak(correct) {
+    if (!streakContainer || !streakCount) return;
+    
     if (correct) {
         streak++;
-        if (streakCount) streakCount.textContent = streak;
-        if (streakContainer && streak >= 2) {
+        streakCount.textContent = streak;
+        if (streak >= 2) {
             streakContainer.classList.add('visible');
             streakContainer.classList.add('fire');
             setTimeout(() => streakContainer.classList.remove('fire'), 500);
@@ -66,7 +68,7 @@ function updateStreak(correct) {
         }
     } else {
         streak = 0;
-        if (streakContainer) streakContainer.classList.remove('visible');
+        streakContainer.classList.remove('visible');
     }
 }
 
@@ -80,6 +82,8 @@ function showScorePopup(text) {
 
 // Initialize particles on load
 document.addEventListener('DOMContentLoaded', () => {
+    streakContainer = document.getElementById('streak-container');
+    streakCount = document.getElementById('streak-count');
     createParticles();
     initRippleEffect();
     initSettings();
@@ -479,10 +483,17 @@ function showCreatorView() {
 
 // --- Creator Functions ---
 let isShowingPrompt = false;
-const addQuestionPrompt = document.getElementById('add-question-prompt');
-const promptAddBtn = document.getElementById('prompt-add-btn');
-const promptFinishBtn = document.getElementById('prompt-finish-btn');
-const creatorFooterControls = document.querySelector('.creator-footer-controls');
+let addQuestionPrompt = null;
+let promptAddBtn = null;
+let promptFinishBtn = null;
+let creatorFooterControls = null;
+
+function initCreatorElements() {
+    addQuestionPrompt = document.getElementById('add-question-prompt');
+    promptAddBtn = document.getElementById('prompt-add-btn');
+    promptFinishBtn = document.getElementById('prompt-finish-btn');
+    creatorFooterControls = document.querySelector('.creator-footer-controls');
+}
 
 function addQuestion() {
     // If coming from prompt, hide it first
