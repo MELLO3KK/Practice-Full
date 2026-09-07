@@ -1,112 +1,33 @@
-// --- Epic Visual Effects ---
+// --- Minimal Visual Effects ---
 
-// Particle System
-function createParticles() {
-    const container = document.getElementById('particles-container');
-    if (!container) return;
-
-    const colors = ['rgba(102, 126, 234, 0.4)', 'rgba(118, 75, 162, 0.4)', 'rgba(240, 147, 251, 0.4)', 'rgba(245, 87, 108, 0.4)'];
-
-    for (let i = 0; i < 20; i++) {
-        const particle = document.createElement('div');
-        particle.className = 'particle';
-        particle.style.left = Math.random() * 100 + '%';
-        particle.style.width = (Math.random() * 20 + 10) + 'px';
-        particle.style.height = particle.style.width;
-        particle.style.background = colors[Math.floor(Math.random() * colors.length)];
-        particle.style.animationDelay = Math.random() * 20 + 's';
-        particle.style.animationDuration = (Math.random() * 10 + 15) + 's';
-        container.appendChild(particle);
-    }
-}
-
-// Confetti Effect
+// Confetti Effect (subtle celebration for perfect scores)
 function launchConfetti() {
     const container = document.getElementById('confetti-container');
     if (!container) return;
 
-    const colors = ['#667eea', '#764ba2', '#f093fb', '#f5576c', '#ffd700', '#00ff88', '#00d4ff'];
-    const shapes = ['square', 'circle'];
+    const colors = ['#5b7c99', '#48bb78', '#f56565'];
 
-    for (let i = 0; i < 150; i++) {
+    for (let i = 0; i < 50; i++) {
         setTimeout(() => {
             const confetti = document.createElement('div');
             confetti.className = 'confetti';
             confetti.style.left = Math.random() * 100 + '%';
             confetti.style.background = colors[Math.floor(Math.random() * colors.length)];
-            confetti.style.width = (Math.random() * 10 + 5) + 'px';
+            confetti.style.width = (Math.random() * 6 + 4) + 'px';
             confetti.style.height = confetti.style.width;
-            confetti.style.borderRadius = shapes[Math.floor(Math.random() * shapes.length)] === 'circle' ? '50%' : '0';
-            confetti.style.animationDuration = (Math.random() * 2 + 2) + 's';
+            confetti.style.animationDuration = (Math.random() * 1.5 + 1.5) + 's';
             container.appendChild(confetti);
 
-            setTimeout(() => confetti.remove(), 4000);
-        }, i * 20);
+            setTimeout(() => confetti.remove(), 3000);
+        }, i * 30);
     }
 }
 
-// Streak Counter
-let streak = 0;
-let streakContainer = null;
-let streakCount = null;
-
-function updateStreak(correct) {
-    if (!streakContainer || !streakCount) return;
-    
-    if (correct) {
-        streak++;
-        streakCount.textContent = streak;
-        if (streak >= 2) {
-            streakContainer.classList.add('visible');
-            streakContainer.classList.add('fire');
-            setTimeout(() => streakContainer.classList.remove('fire'), 500);
-        }
-
-        // Show score popup for streaks
-        if (streak >= 3) {
-            showScorePopup(`${streak}x STREAK!`);
-        }
-    } else {
-        streak = 0;
-        streakContainer.classList.remove('visible');
-    }
-}
-
-function showScorePopup(text) {
-    const popup = document.createElement('div');
-    popup.className = 'score-popup';
-    popup.textContent = text;
-    document.body.appendChild(popup);
-    setTimeout(() => popup.remove(), 1000);
-}
-
-// Initialize particles on load
+// Initialize on load
 document.addEventListener('DOMContentLoaded', () => {
-    streakContainer = document.getElementById('streak-container');
-    streakCount = document.getElementById('streak-count');
-    createParticles();
-    initRippleEffect();
     initSettings();
     initKeyboardShortcuts();
 });
-
-// --- Ripple Effect for Buttons ---
-function initRippleEffect() {
-    document.addEventListener('click', (e) => {
-        const button = e.target.closest('button, .option-tile');
-        if (!button) return;
-
-        const ripple = document.createElement('span');
-        ripple.className = 'ripple';
-        const rect = button.getBoundingClientRect();
-        const size = Math.max(rect.width, rect.height);
-        ripple.style.width = ripple.style.height = size + 'px';
-        ripple.style.left = (e.clientX - rect.left - size / 2) + 'px';
-        ripple.style.top = (e.clientY - rect.top - size / 2) + 'px';
-        button.appendChild(ripple);
-        setTimeout(() => ripple.remove(), 600);
-    });
-}
 
 // --- Settings Panel ---
 let settings = {
@@ -649,13 +570,12 @@ function onQuestionFieldChange(qIndex) {
                 position: absolute;
                 bottom: 10px;
                 right: 10px;
-                background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+                background: #48bb78;
                 color: white;
                 padding: 8px 15px;
                 border-radius: 20px;
                 font-size: 0.85em;
-                font-weight: 600;
-                animation: fadeInUp 0.3s ease-out;
+                font-weight: 500;
                 cursor: pointer;
             `;
             indicator.addEventListener('click', showAddQuestionPrompt);
@@ -921,12 +841,10 @@ function renderTakerQuiz() {
 
     // Reset state on new quiz run
     if (currentQuestionIndex === 0 && !isReattempting) {
-        streak = 0;
         wrongQuestions = [];
         originalQuestions = null;
         firstAttemptScore = 0;
         needsReattempt = false;
-        if (streakContainer) streakContainer.classList.remove('visible');
     }
 
     if (postQuizActions) postQuizActions.classList.add('hidden');
@@ -1037,8 +955,6 @@ function checkAnswer() {
     const correct = selectedOptionIndex === correctIdx && selectedOptionIndex !== -1;
     if (correct) score++;
 
-    // Update streak
-    updateStreak(correct);
     if (!correct) {
         wrongQuestions.push(question);
     }
@@ -1047,11 +963,9 @@ function checkAnswer() {
         tile.classList.remove('selected');
         if (i === correctIdx) {
             tile.classList.add('correct');
-            tile.classList.add('bounce');
         }
         if (i === selectedOptionIndex && !correct) {
             tile.classList.add('incorrect');
-            tile.classList.add('shake');
         }
         tile.style.pointerEvents = 'none';
     });
@@ -1059,22 +973,12 @@ function checkAnswer() {
     feedbackContainer.classList.remove('hidden');
     if (correct) {
         feedbackContainer.classList.add('correct-feedback');
-        const messages = ['Correct!', 'Awesome!', 'Nailed it!', 'Perfect!', 'Brilliant!'];
-        const randomMsg = messages[Math.floor(Math.random() * messages.length)];
-        feedbackMessage.innerHTML = `<i class="fas fa-check-circle"></i> ${randomMsg}`;
+        feedbackMessage.innerHTML = `<i class="fas fa-check-circle"></i> Correct!`;
         playSound('correct');
     } else {
         feedbackContainer.classList.add('incorrect-feedback');
-        const messages = ['Incorrect!', 'Oops!', 'Not quite!', 'Try again next time!'];
-        const randomMsg = messages[Math.floor(Math.random() * messages.length)];
-        feedbackMessage.innerHTML = `<i class="fas fa-times-circle"></i> ${randomMsg}`;
+        feedbackMessage.innerHTML = `<i class="fas fa-times-circle"></i> Incorrect`;
         playSound('wrong');
-        // Shake the view container
-        const viewContainer = document.querySelector('.view-container');
-        if (viewContainer) {
-            viewContainer.classList.add('shake');
-            setTimeout(() => viewContainer.classList.remove('shake'), 600);
-        }
     }
     checkAnswerBtn.style.display = 'none';
     
@@ -1171,10 +1075,6 @@ function showQuizResult() {
     nextQuestionBtn.classList.add('hidden');
     if (scoreResult) scoreResult.textContent = `${emoji} ${score} / ${currentQuiz.questions.length}`;
     if (postQuizActions) postQuizActions.classList.remove('hidden');
-
-    // Hide streak container
-    if (streakContainer) streakContainer.classList.remove('visible');
-    streak = 0;
 }
 
 // --- Taker View Event Listeners ---
